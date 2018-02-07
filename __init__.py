@@ -31,5 +31,5 @@ def classFactory(iface):  # pylint: disable=invalid-name
     :type iface: QgsInterface
     """
     #
-    from .CoordGuesser import CoordGuesser
+    from .CoordGuesser_ import CoordGuesser
     return CoordGuesser(iface)

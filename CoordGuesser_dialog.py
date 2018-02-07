@@ -23,8 +23,7 @@
 
 import os
 
-from PyQt5 import uic
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QFileDialog
 from osgeo import ogr, osr
 from .getCoordinateTool import getCoordinateTool
@@ -33,13 +32,13 @@ from .utilities import *
 from qgis.core import QgsProject
 from qgis.core import QgsMapLayer
 from qgis.gui import QgsMessageBar
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import *
+
 from .CoordinateGuesser import parse
 from .CoordinateGuesser import Parse, parse_file
 #from qgis.utils import iface
-import re, warnings
+import re, warnings, csv
 
-#todo make getLayers that only retrieves vector layers
 def getLayers(destinationComboBox):
     layersDict = QgsProject.instance().mapLayers()
     allLayers = list(layersDict.values())
@@ -61,7 +60,7 @@ def staticSetCoor(destinationLineEdit,x,y):
 #new declaration of ui
 MainWindowUI, MainWindowBase = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'CoordGuesser_dialog_base.ui'))
 
-BrowserUI, BrowserBase = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'CoordGuesser_fileBrowser.ui'))
+BrowserUI, BrowserBase = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'CoordGuesser_fileBrowser_240118.ui'))
 
 #old declaration of ui
 #FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'CoordGuesser_dialog_base.ui'))
@@ -94,8 +93,6 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         self.canvas = iface.mapCanvas()
         #todo use staticSetCoor for self.coorTool
         self.coorTool = getCoordinateTool(self,self.canvas,self.setCoor, QgsProject.instance())
-
-
         getLayers(self.selectLayerComboBox)
         self.iface = iface
 
@@ -213,26 +210,106 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
 """class of the Batch Mode dialog box"""
 class BrowserDialog(BrowserBase, BrowserUI):
 #class BrowserDialog( CoordGuesserDialog):
-    #todo input_test2 doesn't work
-    #todo add in batched file coordinate,name of feature and layer
-    #todo add in batched file coordinate of lat-long
     def __init__(self, parent,iface):
         #BrowserBase.__init__(self, parent)
         super().__init__(parent)
         self.setupUi(self)
-        self.pushButton_Capture_batch.clicked.connect(self.captureButtonClick)
-        #self.selectLayerComboBox_batch.currentIndexChanged.connect(self.onLayerSelectedBatch)
-        #self.pushButton_shpBrowse.pressed.connect(self.getFilePath(1))
-        #not a 'connect'
+        #################
+        #not a 'connect'#
+        ################
         self.iface=iface
         self.canvas = iface.mapCanvas()
-        getLayers(self.selectLayerComboBox_batch)
-        self.coorTool = getCoordinateTool(self,self.canvas,self.setCoor,QgsProject.instance())
-        # connects
-        self.pushButton_Browse.pressed.connect(lambda :self.getFilePath(0))
-        self.pushButton_Capture_batch.clicked.connect(self.captureButtonClick)
-        self.selectLayerComboBox_batch.currentIndexChanged.connect(self.onLayerSelectedBatch)
+        ###########
+        # connects#
+        ###########
+        self.pushButton_Browse.pressed.connect(lambda: self.getFilePath(0))
+        self.lineEdit_Path.textChanged.connect(self.getCsvHeaders)
+        self.lineEdit_Path.textChanged.connect(self.guessHeaders)
         self.pushButton_Batch.pressed.connect(self.onBatchPressed)
+        #self.mangledYCheckBox.toggled.connect(lambda: self.onCheckBoxSelected(self.mangledYComboBox, self.mangledXComboBox))
+        #self.guessYCheckBox.pressed.connect(self.isGuessChecked)
+        #self.guessYCheckBox.pressed.connect(lambda: self.onCheckBoxSelected(self.guessYComboBox, self.guessXComboBox))
+
+    """when 'batch!' is pressed this function creates a file with the unscrambled coordinates"""
+    def onBatchPressed(self):
+
+        mangledXIdx = self.mangledXComboBox.currentIndex()
+        mangledYIdx = self.mangledYComboBox.currentIndex()
+        #guessXIdx = self.guessXComboBox.currentIndex()
+        #guessYIdx = self.guessYComboBox.currentIndex()
+        #layerIdx = self.layerComboBox.currentIndex()
+        #fieldIdx = self.fieldComboBox.currentIndex()
+        #valueIdx = self.fieldValueComboBox.currentIndex()
+        # if mangledX\Y isn't chosen (idx 0) -> error
+        if (mangledXIdx == 0 or mangledYIdx == 0):
+            self.iface.messageBar().pushMessage("Error", "Mangled X\Y are required!",
+                                            level=QgsMessageBar.WARNING)
+            return
+        colList = []
+        comboList = self.getComboBoxList()
+        for box in comboList:
+            if box.currentIndex() == 0:
+                colList.append(None)
+            else:
+                colList.append(box.currentData())
+        inputPath = self.lineEdit_Path.text()
+        (dirPath, fileName) = os.path.split(os.path.abspath(inputPath))
+        newFileName = "batched_" + fileName
+        outputPath = os.path.join(dirPath, newFileName)
+        parse_file.parseFile(colList,inputPath,outputPath)
+
+    """updates all comboBoxes to csv header"""
+    def getCsvHeaders(self):
+        inputPath = self.lineEdit_Path.text()
+        #fills all comboBoxes with the same list of headers
+        headerList = self.getHeaderList()
+        #warnings.warn("got into getCsvHeaders" + str(headerList))
+        comboBoxList = self.getComboBoxList()
+        if headerList is not None and comboBoxList is not None:
+            for box in comboBoxList:
+                self.insertListToBox(box,headerList)
+        #self.guessHeaders()
+
+    def getComboBoxList(self):
+        return [self.mangledXComboBox,self.mangledYComboBox, self.guessXComboBox, self.guessYComboBox,
+                self.layerComboBox,self.fieldComboBox,self.fieldValueComboBox]
+
+    def getComboBoxNamesList(self):
+        return ["mangled X","mangled Y", "guess X", "guess Y","Layer","field","value"]
+
+    def insertListToBox(self, destinationComboBox, tupleOfLists):
+        destinationComboBox.clear()
+        rowNumList = tupleOfLists[0]
+        valueList = tupleOfLists[1]
+        for i in range(0,len(valueList)):
+            destinationComboBox.addItem(valueList[i],rowNumList[i])
+
+    #todo fix it. the function is called but doesn't work
+    """ automatically pairs the comboBox and the correct row, if exists """
+    def guessHeaders(self):
+        comboBoxNameList = self.getComboBoxNamesList()
+        comboBoxList = self.getComboBoxList()
+        for i in range (0,len(comboBoxList)):
+            box = comboBoxList[i]
+            boxName = comboBoxNameList[i]
+            index = box.findText(boxName, QtCore.Qt.MatchFixedString)
+            if index >= 0:
+                box.setCurrentIndex(index)
+
+    """ gets header list from chosen .csv file into the dialog window"""
+    def getHeaderList(self):
+        inputPath = self.lineEdit_Path.text()
+        with open(inputPath) as csvfile:
+            csv_reader = csv.reader(csvfile)
+            #reading csv file and getting the first line (header)
+            csv_headings = next(csv_reader)
+            rowNumList=[None]
+            valueList=[""]
+            headingTuple = ()
+            for i in range(0,len(csv_headings)):
+                rowNumList.append(i)
+                valueList.append(csv_headings[i])
+            return (rowNumList,valueList)
 
     """opens the file browser and gets the csv file path from the user"""
     def getFilePath(self,isShpFile):
@@ -241,101 +318,21 @@ class BrowserDialog(BrowserBase, BrowserUI):
             ##filename1 is a tuple, filename[0] is the path, filename[1] is the file type
             if filename1[0] != None:
                 self.lineEdit_Path.setText(filename1[0])
+
         else:
             filename1 = QFileDialog.getOpenFileName(self, str("Open File"), "/", str("SHP Files (*.shp)"))
             ##filename1 is a tuple, filename[0] is the path, filename[1] is the file type
             if filename1[0] != None:
                 self.lineEdit_shpPath.setText(filename1[0])
 
-    """initializes the feature combo box to the list of tuples (str(feature),centroid)"""
-    def onLayerSelectedBatch(self):
-        selectedLayer = self.selectLayerComboBox_batch.currentData()
-        filePath = self.getLayerSource(selectedLayer)
-        features = self.getCentroids(filePath)
-        self.selectFeatureComboBox_batch.clear()
-        for (name, value) in features:
-            self.selectFeatureComboBox_batch.insertItem(float('inf'), name, value)
+    def isGuessChecked(self, mybool):
+        if mybool is True:
+            self.onCheckBoxSelected(self.guessYComboBox, self.guessXComboBox)
 
-    """gets a layer from qgis and returns its source (file path)"""
-    def getLayerSource(self,chosenLayer):
-        pathAbs = chosenLayer.dataProvider().dataSourceUri()
-        pathAbs=pathAbs[:pathAbs.rfind('|')] # to remove pipe and layer id at the end of string
-        return pathAbs
+    def isMangledChecked(self, mybool):
+        if mybool is True:
+            self.onCheckBoxSelected(self.mangledYComboBox, self.mangledXComboBox)
 
-    """gets the layer's (if vector) features using ogr"""
-    def getFeaturesOgr(self,):
-        pass
-
-    """get the features centroids using OGR (not qgis)"""
-    #getCentroids gets the value of iface from the first class
-    def getCentroids(self,fileSource):
-        #from https://pcjericks.github.io/py-gdalogr-cookbook/vector_layers.html
-        #documentation http://gdal.org/python/osgeo.ogr.Driver-class.html
-        #driver = ogr.GetDriverByName("ESRI Shapefile")
-        #dataSource = driver.Open(fileSource, 0)# 0 means read-only. 1 means writeable.
-        #myLayer = ogr.Open(fileSource)
-        dataSource = ogr.Open(fileSource, 0)
-        layer = dataSource.GetLayer()
-        spatialRef = layer.GetSpatialRef()
-        def describe(feautre):
-            fieldCount = feature.GetFieldCount()
-            return ", ".join(feature.GetFieldAsString(i)[:11] for i in range(fieldCount))
-        featureCenter = []
-        for feature in layer:
-            geom = feature.GetGeometryRef()
-            #returns a list of tuples (string, OGRPoint centroid)
-            (x,y) = ogrCoorTransform(geom.Centroid(), spatialRef)
-            featureCenter.append((describe(feature), (x,y)))
-        return featureCenter
-
-    def onBatchLayerSelected(self,ind):
-        selectedLayer = self.selectLayerComboBox.currentData()
-        layerPath = self.getLayerSource(selectedLayer)
-        features = self.getFeatures(selectedLayer)
-        self.selectFeatureComboBox.clear()
-        for (name, value) in features:
-            self.selectFeatureComboBox.insertItem(float('inf'), name, value)
-
-    def captureButtonClick(self):
-        #todo make the button deactivate itself after one point choice
-        self.canvas.setMapTool(self.coorTool)
-
-    def setCoor(self,x,y):
-        #self.lineEdit_latLong.setText(f"{x}, {y}")
-        #changed the number format to include less digits after the decimal point
-        self.lineEdit_latLong_batch.setText(f"{x:10.10f}, {y:10.10f}")
-
-    """when 'batch!' is pressed this function creates a file with the unscrambled coordinates"""
-    def onBatchPressed(self):
-
-        #creating the output .csv file path
-        inputPath = self.lineEdit_Path.text()
-        (dirPath, fileName) = os.path.split(os.path.abspath(inputPath))
-        newFileName = "batched_" + fileName
-        outputPath = os.path.join(dirPath,newFileName)
-        #outputPath = dirPath + "batchOutput_" + fileName
-        #warnings.warn("inputPath:" + str(inputPath))
-        #warnings.warn("outputPath:" + str(outputPath))
-        try:
-            if self.radioButton_noGuess_batch.isChecked() == True:
-                #warnings.warn("guess in file")
-                parse_file.parseFile(inputPath,outputPath, True, None, None, additional_pj=[])
-
-            #from feature
-            if self.radioButton_Feature_batch.isChecked() == True:
-                #warnings.warn("guess from feature")
-                (featureX, featureY) = self.selectFeatureComboBox_batch.currentData()
-                parse_file.parseFile(inputPath, outputPath, False, None, (featureX, featureY),additional_pj=[])
-
-            #from lat-long text
-            if self.radioButton_longLat_batch.isChecked() == True:
-                #warnings.warn("guess lat-long")
-                (guessX, guessY) = self.lineEdit_latLong_batch.text().split(', ')
-                parse_file.parseFile(inputPath, outputPath, False, (guessX, guessY), None,additional_pj=[])
-
-        except:
-            self.iface.messageBar().pushMessage("Error", "Couldn't parse file - try closing relevant .csv files",
-                                                level=QgsMessageBar.WARNING)
-
-0
-
+    def onCheckBoxSelected(self, currentComboBox, previousComboBox):
+        idx = previousComboBox.currentIndex()
+        currentComboBox.setCurrentIndex(idx+1)
