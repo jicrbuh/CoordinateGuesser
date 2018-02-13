@@ -16,7 +16,7 @@ email=jicrbuh1@gmail.com
 
 about=Unscrambles, parse and guess coordinates
 
-tracker=http://bugs
+tracker=https://github.com/jicrbuh/CoordinateGuesser/issues
 repository=https://github.com/jicrbuh/CoordinateGuesser
 # End of mandatory metadata
 
