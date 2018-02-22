@@ -21,7 +21,7 @@ def genUnmanglers(additionalutmprojs):
         for u in gen(*geohalfcors):
             dest.append(u)
     return dest
-
+#todo don't we need to transform p2 as well to get a correct distance?
 def dist(p1, p2, transform):
     op = Geometry(wkbPoint)
     op.AddPoint(*p1)
@@ -48,14 +48,11 @@ def Parse(inp, approxPoint = None, additionalprojs = [],delimiter = '[\t,]'):
 
     if approxPoint is None:
         return suspects
-
+    #todo does that mean that the distance is always in meters?
     destproj = osr.SpatialReference()
     destproj.ImportFromProj4("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
 
     ap = Geometry(wkbPoint)
-    #warnings.warn(str(approxPoint))
-    #warnings.warn(str(type(approxPoint)))
-    #warnings.warn(str(type(approxPoint[0])))
     ap.AddPoint(*approxPoint)
 
     ap.TransformTo(destproj)
@@ -63,7 +60,7 @@ def Parse(inp, approxPoint = None, additionalprojs = [],delimiter = '[\t,]'):
 
     dsuspects = []
     for s,u in suspects:
-        d = dist(s,approxPoint,destproj)
+        d = dist(s,approxPoint,destproj) #dest proj
         dsuspects.append((s,u,d))
 
     dsuspects.sort(key=lambda a:a[-1])
