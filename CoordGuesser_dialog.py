@@ -27,6 +27,7 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QFileDialog
 from osgeo import ogr, osr
 from .getCoordinateTool import getCoordinateTool
+from qgis.gui import QgsVertexMarker
 
 from .utilities import *
 from qgis.core import QgsProject
@@ -91,14 +92,17 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         #not a 'connect'
         ################
         self.canvas = iface.mapCanvas()
-        #todo use staticSetCoor for self.coorTool
-        self.coorTool = getCoordinateTool(self,self.canvas,self.setCoor, QgsProject.instance())
-        getLayers(self.selectLayerComboBox)
         self.iface = iface
+        getLayers(self.selectLayerComboBox)
+        #todo use staticSetCoor for self.coorTool
+        m = QgsVertexMarker(self.canvas)
+        self.VMarker = m
+        self.VMarker.hide()
+        self.coorTool = getCoordinateTool(self,self.canvas,self.setCoor, QgsProject.instance(),self.VMarker)
 
     def captureButtonClick(self):
-        #todo make the button deactivate itself after one point choice
         self.canvas.setMapTool(self.coorTool)
+        self.coorTool.clean()
 
     def setCoor(self,x,y):
         #self.lineEdit_latLong.setText(f"{x}, {y}")
@@ -206,6 +210,10 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
 
     def visChange(self, visible):
         self.tell(visible)
+
+    def closeEvent(self, event):
+        warnings.warn("closeEvent")
+        self.canvas.scene().removeItem(self.VMarker)
 
 """class of the Batch Mode dialog box"""
 class BrowserDialog(BrowserBase, BrowserUI):
@@ -336,3 +344,5 @@ class BrowserDialog(BrowserBase, BrowserUI):
     def onCheckBoxSelected(self, currentComboBox, previousComboBox):
         idx = previousComboBox.currentIndex()
         currentComboBox.setCurrentIndex(idx+1)
+
+
