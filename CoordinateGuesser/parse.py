@@ -8,9 +8,9 @@ import warnings
 def genUnmanglers(additionalutmprojs):
     dest = []
     utmHalfcors = [identUTM()]
-    utmgens = [utmBiasedGen(0,0,36),utmBiasedGen(0,0,37)]
+    #utmgens = [utmBiasedGen(0,0,36),utmBiasedGen(0,0,37)]
     #todo the next lines makes the guesses wrong
-    #utmgens = [utmBiasedGen(0,0,i) for i in range(1,61)]
+    utmgens = [utmBiasedGen(0,0,i) for i in range(1,61)]
     for aup in additionalutmprojs:
         if isinstance(aup,int) or len(aup) == 1:
             aup = (0,0,aup)

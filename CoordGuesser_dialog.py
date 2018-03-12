@@ -55,7 +55,6 @@ def getLayers(destinationComboBox):
 
 def staticSetCoor(destinationLineEdit,x,y):
     #self.lineEdit_latLong.setText(f"{x}, {y}")
-    #changed the number format to include less digits after the decimal point
     destinationLineEdit.setText(f"{x:10.10f}, {y:10.10f}")
 
 #new declaration of ui
@@ -80,14 +79,6 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
-        ######################
-        ######connects#######
-        ######################
-        self.pushButton_Capture.clicked.connect(self.captureButtonClick)
-        self.selectLayerComboBox.currentIndexChanged.connect(self.onLayerSelected)
-        self.selectFeatureComboBox.currentIndexChanged.connect(self.onFeatureSelected) # if user chose a feature, show its coordinate
-        self.pushButton_Go.pressed.connect(self.guessCoor) # if Go! button is pushed, guess the coor using parse
-        self.pushButton_Batch.pressed.connect(self.handleBatchPress)
         ###############
         #not a 'connect'
         ################
@@ -99,6 +90,17 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         self.VMarker = m
         self.VMarker.hide()
         self.coorTool = getCoordinateTool(self,self.canvas,self.setCoor, QgsProject.instance(),self.VMarker)
+
+        ######################
+        ######connects#######
+        ######################
+        self.pushButton_Capture.clicked.connect(self.captureButtonClick)
+        #self.selectLayerComboBox.currentIndexChanged.connect(self.onLayerSelected)
+        self.selectLayerComboBox.currentIndexChanged.connect(self.getFieldList)
+        #self.selectFeatureComboBox.currentIndexChanged.connect(self.onFeatureSelected)  #old
+        self.selectFieldComboBox.currentIndexChanged.connect(self.onFieldSelected)
+        self.pushButton_Go.pressed.connect(self.guessCoor)  # if Go! button is pushed, guess the coor using parse
+        self.pushButton_Batch.pressed.connect(self.handleBatchPress)
 
     def captureButtonClick(self):
         self.canvas.setMapTool(self.coorTool)
@@ -121,13 +123,40 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
     #        #comboBox.insertItem(float('inf'), layer.name(), layer)
      #       self.selectLayerComboBox.insertItem(float('inf'), layer.name(), layer)
 
-    #gets all the features of a selected layer into the combobox
+    """gets all the features of a selected layer into the combobox"""
     def onLayerSelected(self, ind):
+        #warnings.warn("onLayerSelected")
         selectedLayer = self.selectLayerComboBox.currentData()
         features = self.getFeatures(selectedLayer)
         self.selectFeatureComboBox.clear()
         for (name, value) in features:
             self.selectFeatureComboBox.insertItem(float('inf'), name, value)
+        #self.getFieldList(0)
+
+    def getFieldList(self, ind):
+        # todo https://gis.stackexchange.com/questions/212618/check-particular-feature-exists-using-pyqgis
+        #warnings.warn("GetFieldsList")
+        selectedLayer = self.selectLayerComboBox.currentData()
+        fieldList = []
+        fields = selectedLayer.fields()
+        self.selectFieldComboBox.clear()
+        for field in fields:
+            warnings.warn(str(field.name()))
+            self.selectFieldComboBox.insertItem(float('inf'), field.name(), field)
+
+    """after the user selects a field from the combobox, the feature combobox updates with the field values"""
+    def onFieldSelected(self,ind):
+        self.selectFeatureComboBox.clear()
+        selectedLayer = self.selectLayerComboBox.currentData()
+        selectedField = self.selectFieldComboBox.currentData()
+        selectedFieldName = self.selectFieldComboBox.currentText()
+        #index = selectedLayer.fieldNameIndex(selectedField)
+        features = selectedLayer.getFeatures()
+        if selectedFieldName:
+            for feature in features:
+                myattr = feature.attribute(selectedFieldName)
+                ctrPoint = feature.geometry().centroid().asPoint()
+                self.selectFeatureComboBox.insertItem(float('inf'), str(myattr), ctrPoint)
 
     """gets all the features (and their center coor) for the selected layer"""
     def getFeatures(self, mylayer):
@@ -164,7 +193,12 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         try:
             (x,y) = re.split(self.xydelim.text(),coorText,1)
         except ValueError:
-            self.iface.messageBar().pushMessage("Error", "XY delimiter not found in scrambled coor", level=QgsMessageBar.WARNING)
+            #ver 2.9
+            try:
+                self.iface.messageBar().pushMessage("Error", "XY delimiter not found in scrambled coor", level=QgsMessageBar.WARNING)
+            #ver 3.0
+            except ImportError:
+                self.iface.messageBar().pushWarning("Error", "XY delimiter not found in scrambled coor")
             return
 
         #radioButton cases - map click, layer\feature, or no guess
@@ -183,6 +217,10 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
             (guessX,guessY) = self.selectFeatureComboBox.currentData() #guess is the centroid of selected feature
             output_guesses = Parse((x, y), (float(guessX),float(guessY)))
             self.showOutputs(output_guesses)
+
+    def getAdditionalProj(self):
+        addProjText = self.lineEdit_addProj.getText()
+        
 
     def showOutputs(self, *output_guesses, isguess=True):
         #warnings.warn("output_guesses type: " + str(type(output_guesses))) # 'tuple'
@@ -211,9 +249,11 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
     def visChange(self, visible):
         self.tell(visible)
 
+    """on closing the main window, the red marker is deleted"""
     def closeEvent(self, event):
-        warnings.warn("closeEvent")
         self.canvas.scene().removeItem(self.VMarker)
+
+
 
 """class of the Batch Mode dialog box"""
 class BrowserDialog(BrowserBase, BrowserUI):
@@ -259,11 +299,14 @@ class BrowserDialog(BrowserBase, BrowserUI):
             if box.currentIndex() == 0:
                 colList.append(None)
             else:
-                colList.append(box.currentData())
+                #colList.append(box.currentData()) #append the column's number
+                colList.append(box.currentText()) #append the column's header
         inputPath = self.lineEdit_Path.text()
         (dirPath, fileName) = os.path.split(os.path.abspath(inputPath))
         newFileName = "batched_" + fileName
         outputPath = os.path.join(dirPath, newFileName)
+        additionalProj = self.lineEdit_addProj.text()
+
         parse_file.parseFile(colList,inputPath,outputPath)
 
     """updates all comboBoxes to csv header"""
@@ -292,7 +335,6 @@ class BrowserDialog(BrowserBase, BrowserUI):
         for i in range(0,len(valueList)):
             destinationComboBox.addItem(valueList[i],rowNumList[i])
 
-    #todo fix it. the function is called but doesn't work
     """ automatically pairs the comboBox and the correct row, if exists """
     def guessHeaders(self):
         comboBoxNameList = self.getComboBoxNamesList()
@@ -322,13 +364,13 @@ class BrowserDialog(BrowserBase, BrowserUI):
     """opens the file browser and gets the csv file path from the user"""
     def getFilePath(self,isShpFile):
         if isShpFile==0:
-            filename1 = QFileDialog.getOpenFileName(self, str("Open File"), "/", str("CSV Files (*.csv)"))
+            filename1 = QFileDialog.getOpenFileName(self, str("Open File"), "", str("CSV Files (*.csv)"))
             ##filename1 is a tuple, filename[0] is the path, filename[1] is the file type
             if filename1[0] != None:
                 self.lineEdit_Path.setText(filename1[0])
 
         else:
-            filename1 = QFileDialog.getOpenFileName(self, str("Open File"), "/", str("SHP Files (*.shp)"))
+            filename1 = QFileDialog.getOpenFileName(self, str("Open File"), "", str("SHP Files (*.shp)"))
             ##filename1 is a tuple, filename[0] is the path, filename[1] is the file type
             if filename1[0] != None:
                 self.lineEdit_shpPath.setText(filename1[0])

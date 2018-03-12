@@ -84,8 +84,6 @@ http://www.gdal.org/ogr_arch.html
         for i,row in enumerate(reader): #i is the index of the row
             try:
                 print("in enumerate loop")
-                #if i == 0: #skip headers
-                #    continue
 
                 center_pt = ("", "")
                 output_pt = ("", "")

@@ -6,20 +6,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>430</width>
-    <height>521</height>
+    <width>397</width>
+    <height>550</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>0</width>
-    <height>500</height>
+    <height>550</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>16777215</width>
-    <height>569</height>
+    <height>550</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -31,8 +31,35 @@
      <property name="title">
       <string>Inputs:</string>
      </property>
-     <layout class="QFormLayout" name="formLayout_2">
-      <item row="2" column="0" colspan="2">
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_6">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;For example: 34.121,32.1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Scrambled Coordinate:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>XY Delimiter:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_10">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A valid PROJ.4 string (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;+proj=longlat +datum=WGS84 +no_defs&lt;/span&gt;) or a utm zone (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;60&lt;/span&gt;)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Additional projection (optional):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0" colspan="3">
        <widget class="QGroupBox" name="groupBox">
         <property name="title">
          <string>Your best guess:</string>
@@ -59,7 +86,11 @@
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="QLineEdit" name="lineEdit_latLong"/>
+          <widget class="QLineEdit" name="lineEdit_latLong">
+           <property name="text">
+            <string>1,1</string>
+           </property>
+          </widget>
          </item>
          <item row="2" column="1">
           <widget class="QPushButton" name="pushButton_Capture">
@@ -82,6 +113,13 @@
            </property>
           </widget>
          </item>
+         <item row="9" column="0">
+          <widget class="QLabel" name="labelSelectLayer">
+           <property name="text">
+            <string>Select Field:</string>
+           </property>
+          </widget>
+         </item>
          <item row="8" column="1">
           <widget class="QComboBox" name="selectLayerComboBox">
            <property name="sizePolicy">
@@ -92,15 +130,25 @@
            </property>
           </widget>
          </item>
-         <item row="9" column="0">
+         <item row="10" column="0">
           <widget class="QLabel" name="labelSelectLayer_4">
            <property name="text">
-            <string>Select Feature:</string>
+            <string>Select Feature by attribute:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="10" column="1">
+          <widget class="QComboBox" name="selectFeatureComboBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
            </property>
           </widget>
          </item>
          <item row="9" column="1">
-          <widget class="QComboBox" name="selectFeatureComboBox">
+          <widget class="QComboBox" name="selectFieldComboBox">
            <property name="sizePolicy">
             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -112,44 +160,41 @@
         </layout>
        </widget>
       </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_6">
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;For example: 34.121,32.1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
+      <item row="4" column="0">
+       <widget class="QPushButton" name="pushButton_Batch">
         <property name="text">
-         <string>Scrambled Coordinate:</string>
+         <string>Batch Mode</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="scrambled"/>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>XY Delimiter:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="xydelim">
-        <property name="text">
-         <string>,</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
+      <item row="4" column="1">
        <widget class="QPushButton" name="pushButton_Go">
         <property name="text">
          <string>Go!</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
-       <widget class="QPushButton" name="pushButton_Batch">
+      <item row="2" column="1" colspan="2">
+       <widget class="QLineEdit" name="LineEdit_addProj">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A valid PROJ.4 string (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;+proj=longlat +datum=WGS84 +no_defs&lt;/span&gt;) or a utm zone (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;60&lt;/span&gt;)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
-         <string>Batch Mode</string>
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" colspan="2">
+       <widget class="QLineEdit" name="xydelim">
+        <property name="text">
+         <string>,</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" colspan="2">
+       <widget class="QLineEdit" name="scrambled">
+        <property name="text">
+         <string/>
         </property>
        </widget>
       </item>
@@ -158,6 +203,18 @@
    </item>
    <item row="2" column="0">
     <widget class="QGroupBox" name="groupBox_outputs">
+     <property name="minimumSize">
+      <size>
+       <width>376</width>
+       <height>111</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>111</height>
+      </size>
+     </property>
      <property name="title">
       <string>Outputs:</string>
      </property>
@@ -165,7 +222,7 @@
       <item row="1" column="0">
        <widget class="QLabel" name="label_7">
         <property name="text">
-         <string>Best candidate:</string>
+         <string>Best candidate (WGS84 Geo):</string>
         </property>
        </widget>
       </item>
@@ -197,6 +254,12 @@
    </item>
    <item row="0" column="0">
     <widget class="QLabel" name="label_title">
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>39</height>
+      </size>
+     </property>
      <property name="font">
       <font>
        <pointsize>24</pointsize>
