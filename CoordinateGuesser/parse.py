@@ -9,6 +9,8 @@ def genUnmanglers(additionalutmprojs):
     dest = []
     utmHalfcors = [identUTM()]
     utmgens = [utmBiasedGen(0,0,36),utmBiasedGen(0,0,37)]
+    #todo the next lines makes the guesses wrong
+    #utmgens = [utmBiasedGen(0,0,i) for i in range(1,61)]
     for aup in additionalutmprojs:
         if isinstance(aup,int) or len(aup) == 1:
             aup = (0,0,aup)
@@ -21,7 +23,7 @@ def genUnmanglers(additionalutmprojs):
         for u in gen(*geohalfcors):
             dest.append(u)
     return dest
-#todo don't we need to transform p2 as well to get a correct distance?
+
 def dist(p1, p2, transform):
     op = Geometry(wkbPoint)
     op.AddPoint(*p1)
