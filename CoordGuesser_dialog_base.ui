@@ -58,7 +58,7 @@
       <item row="2" column="0">
        <widget class="QLabel" name="label_10">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A valid PROJ.4 string (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;+proj=longlat +datum=WGS84 +no_defs&lt;/span&gt;) or a utm zone (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;60&lt;/span&gt;)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A valid PROJ.4 string (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;+proj=longlat +datum=WGS84 +no_defs&lt;/span&gt;) or a UTM zone (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;60&lt;/span&gt;)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
          <string>Additional projection (optional):</string>
@@ -150,7 +150,7 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>By a centroid of feature from Layer:</string>
+            <string>By a centroid of a feature from Layer:</string>
            </property>
           </widget>
          </item>
@@ -234,9 +234,9 @@
        </widget>
       </item>
       <item row="2" column="1" colspan="2">
-       <widget class="QLineEdit" name="LineEdit_addProj">
+       <widget class="QLineEdit" name="lineEdit_addProj">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A valid PROJ.4 string (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;+proj=longlat +datum=WGS84 +no_defs&lt;/span&gt;) or a utm zone (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;60&lt;/span&gt;)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A valid PROJ.4 string (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;+proj=longlat +datum=WGS84 +no_defs&lt;/span&gt;) or a UTM zone (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;60&lt;/span&gt;)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
          <string/>
@@ -307,7 +307,7 @@
       <item row="1" column="0">
        <widget class="QLabel" name="label_8">
         <property name="text">
-         <string>Distance from guess [decimal degrees]:</string>
+         <string>Distance from guess [degrees]:</string>
         </property>
        </widget>
       </item>

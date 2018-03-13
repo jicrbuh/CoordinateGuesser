@@ -12,9 +12,14 @@ def genUnmanglers(additionalutmprojs):
     #todo the next lines makes the guesses wrong
     utmgens = [utmBiasedGen(0,0,i) for i in range(1,61)]
     for aup in additionalutmprojs:
-        if isinstance(aup,int) or len(aup) == 1:
-            aup = (0,0,aup)
+        print(str(aup))
+       # if isinstance(aup,int) or len(aup) == 1:
+         #   aup = (0,0,aup)
+       # else isinstance(aup,string):
+        #    aup=(0,0,aup)
+        aup =(0,0,aup)
         utmgens.append(utmBiasedGen(*aup))
+        #utmgens.append(utmBiasedGen(aup)) #chen
     for gen in utmgens:
         for u in gen(*utmHalfcors):
             dest.append(u)

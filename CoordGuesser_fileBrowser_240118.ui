@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>484</width>
-    <height>528</height>
+    <height>415</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -212,7 +212,7 @@
    <item row="4" column="0">
     <widget class="QLabel" name="labelSelectLayer_addProj">
      <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A valid PROJ.4 string (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;+proj=longlat +datum=WGS84 +no_defs&lt;/span&gt;) or a utm zone (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;60&lt;/span&gt;)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A valid PROJ.4 string (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;+proj=longlat +datum=WGS84 +no_defs&lt;/span&gt;) or a UTM zone (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;60&lt;/span&gt;)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="text">
       <string>Additional projections:</string>
@@ -229,7 +229,7 @@
    <item row="4" column="1" colspan="3">
     <widget class="QLineEdit" name="lineEdit_addProj">
      <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A valid PROJ.4 string (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;+proj=longlat +datum=WGS84 +no_defs&lt;/span&gt;) or a utm zone (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;60&lt;/span&gt;)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A valid PROJ.4 string (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;+proj=longlat +datum=WGS84 +no_defs&lt;/span&gt;) or a UTM zone (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;60&lt;/span&gt;)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
    </item>

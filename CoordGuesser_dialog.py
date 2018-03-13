@@ -188,6 +188,8 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
     def guessCoor(self):
         # coortext is the scrambled coor, xydelim is the user's delimiter
         coorText = self.scrambled.text()
+        additionProj = self.getAdditionalProj()
+        print("additionProj: " + str(additionProj))
         #(x, y) = re.split(self.xydelim.text(), coorText, 1)
         #if the delimiter isn't found in the user's scrambled text an error message
         try:
@@ -203,24 +205,43 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
 
         #radioButton cases - map click, layer\feature, or no guess
         if self.noGivenRadioButton.isChecked() == True:
-            output_guesses = Parse((x, y)) #uncomment if you don't want parse to split the str coortext
+            output_guesses = Parse((x, y),None,additionProj) #uncomment if you don't want parse to split the str coortext
             #output_guesses = Parse(coorText, delimiter=self.xydelim.text())
             self.showOutputs(output_guesses,isguess=False)
 
         if self.fromMapRadioButton.isChecked() == True:
             (guessX,guessY) = self.lineEdit_latLong.text().split(', ') #guess is the point the user clicked
             (guessX, guessY) = (float(guessX),float(guessY))
-            output_guesses = Parse((x, y), (guessX,guessY))
+            output_guesses = Parse((x, y), (guessX,guessY),additionProj)
             self.showOutputs(output_guesses)
 
         if self.fromLayerRadioButton.isChecked() == True:
             (guessX,guessY) = self.selectFeatureComboBox.currentData() #guess is the centroid of selected feature
-            output_guesses = Parse((x, y), (float(guessX),float(guessY)))
+            output_guesses = Parse((x, y), (float(guessX),float(guessY)), additionProj)
             self.showOutputs(output_guesses)
 
     def getAdditionalProj(self):
-        addProjText = self.lineEdit_addProj.getText()
-
+        addProjText = self.lineEdit_addProj.text()
+        if addProjText:
+            if len(addProjText) in range(1,3):
+                try:
+                    myzone = int(addProjText)
+                    return [myzone]
+                except ValueError:
+                    return []
+            elif isinstance(addProjText, str):
+                destproj = osr.SpatialReference()
+                errorInt = destproj.ImportFromProj4(addProjText)
+                if errorInt == 5:
+                    try:
+                        self.iface.messageBar().pushMessage("Error", "Additional projection isn't a valid PROJ.4 string",
+                                                            level=QgsMessageBar.WARNING)
+                    # ver 3.0
+                    except ImportError:
+                        self.iface.messageBar().pushWarning("Error", "Additional projection isn't a valid PROJ.4 string")
+                    return []
+                return [addProjText]
+        return []
 
     def showOutputs(self, *output_guesses, isguess=True):
         #warnings.warn("output_guesses type: " + str(type(output_guesses))) # 'tuple'
@@ -305,9 +326,31 @@ class BrowserDialog(BrowserBase, BrowserUI):
         (dirPath, fileName) = os.path.split(os.path.abspath(inputPath))
         newFileName = "batched_" + fileName
         outputPath = os.path.join(dirPath, newFileName)
-        additionalProj = self.lineEdit_addProj.text()
+        additionalProj = self.getAdditionalProj()
+        parse_file.parseFile(colList,inputPath,outputPath,additionalProj)
 
-        parse_file.parseFile(colList,inputPath,outputPath)
+    def getAdditionalProj(self):
+        addProjText = self.lineEdit_addProj.text()
+        if addProjText:
+            if len(addProjText) in range(1,3):
+                try:
+                    myzone = int(addProjText)
+                    return [myzone]
+                except ValueError:
+                    return []
+            elif isinstance(addProjText, str):
+                destproj = osr.SpatialReference()
+                errorInt = destproj.ImportFromProj4(addProjText)
+                if errorInt == 5:
+                    try:
+                        self.iface.messageBar().pushMessage("Error", "Additional projection isn't a valid PROJ.4 string",
+                                                            level=QgsMessageBar.WARNING)
+                    # ver 3.0
+                    except ImportError:
+                        self.iface.messageBar().pushWarning("Error", "Additional projection isn't a valid PROJ.4 string")
+                    return []
+                return [addProjText]
+        return []
 
     """updates all comboBoxes to csv header"""
     def getCsvHeaders(self):

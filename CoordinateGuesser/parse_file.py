@@ -96,12 +96,12 @@ http://www.gdal.org/ogr_arch.html
                 input_pt = (row[mangledXCol], row[mangledYCol])
                 print("input_pt: " + input_pt[0] + "," + input_pt[1])
                 if not guessInFile: #is False:
-                    output_pt, unmangler, distance = parseNoGuess(input_pt)
+                    output_pt, unmangler, distance = parseNoGuess(input_pt,additional_pj)
 
                 elif usingGuess: #is True:
                     if all((row[guessXCol],row[guessYCol])):#row[guessXCol] and row[guessYCol]:
                         center_pt = (float(row[guessXCol]), float(row[guessYCol]))
-                        output_pt, unmangler, distance = parseWithGuess(input_pt, center_pt)
+                        output_pt, unmangler, distance = parseWithGuess(input_pt, center_pt,additional_pj)
 
                     elif usingLayer:# is True:
                         if all((row[layerCol],row[fieldCol],row[valueCol])):#row[layerCol] and row[fieldCol] and row[valueCol]:
@@ -111,7 +111,7 @@ http://www.gdal.org/ogr_arch.html
                             # warnings.warn("layer: "+str(layer) + " field: "+ field +" feature: "+ feature)
                             x, y = getFeature(layer, field, feature)
                             center_pt = (float(x), float(y))
-                            output_pt, unmangler, distance = parseWithGuess(input_pt, center_pt)
+                            output_pt, unmangler, distance = parseWithGuess(input_pt, center_pt,additional_pj)
 
                         else:
                             output_pt, unmangler, distance = parseNoGuess(input_pt)
