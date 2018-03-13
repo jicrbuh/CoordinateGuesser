@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>397</width>
+    <width>460</width>
     <height>550</height>
    </rect>
   </property>
@@ -19,7 +19,7 @@
   <property name="maximumSize">
    <size>
     <width>16777215</width>
-    <height>550</height>
+    <height>16777215</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -28,6 +28,12 @@
   <layout class="QGridLayout" name="gridLayout">
    <item row="1" column="0">
     <widget class="QGroupBox" name="groupBox_inputs">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+       <horstretch>3</horstretch>
+       <verstretch>3</verstretch>
+      </sizepolicy>
+     </property>
      <property name="title">
       <string>Inputs:</string>
      </property>
@@ -61,12 +67,30 @@
       </item>
       <item row="3" column="0" colspan="3">
        <widget class="QGroupBox" name="groupBox">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>2</horstretch>
+          <verstretch>2</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="autoFillBackground">
+         <bool>false</bool>
+        </property>
         <property name="title">
          <string>Your best guess:</string>
         </property>
-        <layout class="QFormLayout" name="formLayout">
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_3">
          <item row="0" column="0">
           <widget class="QRadioButton" name="noGivenRadioButton">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="text">
             <string>No given guess</string>
            </property>
@@ -77,6 +101,12 @@
          </item>
          <item row="1" column="0">
           <widget class="QRadioButton" name="fromMapRadioButton">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="text">
             <string>By a given Long,Lat:</string>
            </property>
@@ -87,6 +117,12 @@
          </item>
          <item row="1" column="1">
           <widget class="QLineEdit" name="lineEdit_latLong">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="text">
             <string>1,1</string>
            </property>
@@ -94,63 +130,93 @@
          </item>
          <item row="2" column="1">
           <widget class="QPushButton" name="pushButton_Capture">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="text">
             <string>Start Capture</string>
            </property>
           </widget>
          </item>
-         <item row="6" column="0">
+         <item row="3" column="0">
           <widget class="QRadioButton" name="fromLayerRadioButton">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="text">
             <string>By a centroid of feature from Layer:</string>
            </property>
           </widget>
          </item>
-         <item row="8" column="0">
+         <item row="4" column="0">
           <widget class="QLabel" name="labelSelectLayer_2">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="text">
             <string>Select Layer:</string>
            </property>
           </widget>
          </item>
-         <item row="9" column="0">
+         <item row="4" column="1">
+          <widget class="QComboBox" name="selectLayerComboBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
           <widget class="QLabel" name="labelSelectLayer">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="text">
             <string>Select Field:</string>
            </property>
           </widget>
          </item>
-         <item row="8" column="1">
-          <widget class="QComboBox" name="selectLayerComboBox">
+         <item row="5" column="1">
+          <widget class="QComboBox" name="selectFieldComboBox">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
           </widget>
          </item>
-         <item row="10" column="0">
+         <item row="6" column="0">
           <widget class="QLabel" name="labelSelectLayer_4">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="text">
             <string>Select Feature by attribute:</string>
            </property>
           </widget>
          </item>
-         <item row="10" column="1">
+         <item row="6" column="1">
           <widget class="QComboBox" name="selectFeatureComboBox">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-          </widget>
-         </item>
-         <item row="9" column="1">
-          <widget class="QComboBox" name="selectFieldComboBox">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
@@ -164,13 +230,6 @@
        <widget class="QPushButton" name="pushButton_Batch">
         <property name="text">
          <string>Batch Mode</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QPushButton" name="pushButton_Go">
-        <property name="text">
-         <string>Go!</string>
         </property>
        </widget>
       </item>
@@ -198,11 +257,24 @@
         </property>
        </widget>
       </item>
+      <item row="4" column="1" colspan="2">
+       <widget class="QPushButton" name="pushButton_Go">
+        <property name="text">
+         <string>Go!</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
    <item row="2" column="0">
     <widget class="QGroupBox" name="groupBox_outputs">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+       <horstretch>1</horstretch>
+       <verstretch>1</verstretch>
+      </sizepolicy>
+     </property>
      <property name="minimumSize">
       <size>
        <width>376</width>
@@ -218,35 +290,38 @@
      <property name="title">
       <string>Outputs:</string>
      </property>
-     <layout class="QFormLayout" name="formLayout_3">
-      <item row="1" column="0">
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <item row="0" column="0">
        <widget class="QLabel" name="label_7">
         <property name="text">
          <string>Best candidate (WGS84 Geo):</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="0" column="1">
        <widget class="QLineEdit" name="out_xy"/>
       </item>
-      <item row="2" column="0">
+      <item row="1" column="0">
        <widget class="QLabel" name="label_8">
         <property name="text">
          <string>Distance from guess [decimal degrees]:</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
+      <item row="1" column="1">
        <widget class="QLineEdit" name="distance"/>
       </item>
-      <item row="3" column="0">
+      <item row="2" column="0">
        <widget class="QLabel" name="label_9">
         <property name="text">
          <string>Method used:</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
+      <item row="2" column="1">
        <widget class="QLineEdit" name="method_used"/>
       </item>
      </layout>

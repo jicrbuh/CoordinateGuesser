@@ -220,7 +220,7 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
 
     def getAdditionalProj(self):
         addProjText = self.lineEdit_addProj.getText()
-        
+
 
     def showOutputs(self, *output_guesses, isguess=True):
         #warnings.warn("output_guesses type: " + str(type(output_guesses))) # 'tuple'
