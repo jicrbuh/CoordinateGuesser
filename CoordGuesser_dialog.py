@@ -100,7 +100,8 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         #self.selectFeatureComboBox.currentIndexChanged.connect(self.onFeatureSelected)  #old
         self.selectFieldComboBox.currentIndexChanged.connect(self.onFieldSelected)
         self.pushButton_Go.pressed.connect(self.guessCoor)  # if Go! button is pushed, guess the coor using parse
-        self.pushButton_Batch.pressed.connect(self.handleBatchPress)
+        #self.pushButton_Batch.pressed.connect(self.handleBatchPress)
+        self.pushButton_browse.pressed.connect(lambda: self.getFilePath(0))
 
     def captureButtonClick(self):
         self.canvas.setMapTool(self.coorTool)
@@ -190,35 +191,48 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         coorText = self.scrambled.text()
         additionProj = self.getAdditionalProj()
         print("additionProj: " + str(additionProj))
-        #(x, y) = re.split(self.xydelim.text(), coorText, 1)
-        #if the delimiter isn't found in the user's scrambled text an error message
-        try:
-            (x,y) = re.split(self.xydelim.text(),coorText,1)
-        except ValueError:
-            #ver 2.9
+
+
+        if self.radioButton_single.isChecked():
+            # (x, y) = re.split(self.xydelim.text(), coorText, 1)
+            # if the delimiter isn't found in the user's scrambled text an error message
             try:
-                self.iface.messageBar().pushMessage("Error", "XY delimiter not found in scrambled coor", level=QgsMessageBar.WARNING)
-            #ver 3.0
-            except ImportError:
-                self.iface.messageBar().pushWarning("Error", "XY delimiter not found in scrambled coor")
-            return
+                (x, y) = re.split(self.xydelim.text(), coorText, 1)
+            except ValueError:
+                # ver 2.9
+                try:
+                    self.iface.messageBar().pushMessage("Error", "XY delimiter not found in scrambled coor",
+                                                        level=QgsMessageBar.WARNING)
+                # ver 3.0
+                except ImportError:
+                    self.iface.messageBar().pushWarning("Error", "XY delimiter not found in scrambled coor")
+                return
+            if self.noGivenRadioButton.isChecked() == True:
+                output_guesses = Parse((x, y),None,additionProj) #uncomment if you don't want parse to split the str coortext
+                #output_guesses = Parse(coorText, delimiter=self.xydelim.text())
+                self.showOutputs(output_guesses,isguess=False)
 
-        #radioButton cases - map click, layer\feature, or no guess
-        if self.noGivenRadioButton.isChecked() == True:
-            output_guesses = Parse((x, y),None,additionProj) #uncomment if you don't want parse to split the str coortext
-            #output_guesses = Parse(coorText, delimiter=self.xydelim.text())
-            self.showOutputs(output_guesses,isguess=False)
+            if self.fromMapRadioButton.isChecked() == True:
+                (guessX,guessY) = self.lineEdit_latLong.text().split(', ') #guess is the point the user clicked
+                (guessX, guessY) = (float(guessX),float(guessY))
+                output_guesses = Parse((x, y), (guessX,guessY),additionProj)
+                self.showOutputs(output_guesses)
 
-        if self.fromMapRadioButton.isChecked() == True:
-            (guessX,guessY) = self.lineEdit_latLong.text().split(', ') #guess is the point the user clicked
-            (guessX, guessY) = (float(guessX),float(guessY))
-            output_guesses = Parse((x, y), (guessX,guessY),additionProj)
-            self.showOutputs(output_guesses)
-
-        if self.fromLayerRadioButton.isChecked() == True:
-            (guessX,guessY) = self.selectFeatureComboBox.currentData() #guess is the centroid of selected feature
-            output_guesses = Parse((x, y), (float(guessX),float(guessY)), additionProj)
-            self.showOutputs(output_guesses)
+            if self.fromLayerRadioButton.isChecked() == True:
+                (guessX,guessY) = self.selectFeatureComboBox.currentData() #guess is the centroid of selected feature
+                output_guesses = Parse((x, y), (float(guessX),float(guessY)), additionProj)
+                self.showOutputs(output_guesses)
+        #batch mode
+        else:
+            inputPath,outpuPath = self.getInOutPath()
+            guessX, guessY = (None,None)
+            if self.fromMapRadioButton.isChecked() == True:
+                (guessX, guessY) = self.lineEdit_latLong.text().split(', ')  # guess is the point the user clicked
+                (guessX, guessY) = (float(guessX), float(guessY))
+            if self.fromLayerRadioButton.isChecked() == True:
+                (guessX, guessY) = self.selectFeatureComboBox.currentData()  # guess is the centroid of selected feature
+            parse_file.parseFileNoCol(inputPath,outpuPath,guessX,guessY,additionProj)
+            pass
 
     def getAdditionalProj(self):
         addProjText = self.lineEdit_addProj.text()
@@ -274,160 +288,27 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
     def closeEvent(self, event):
         self.canvas.scene().removeItem(self.VMarker)
 
-
-
-"""class of the Batch Mode dialog box"""
-class BrowserDialog(BrowserBase, BrowserUI):
-#class BrowserDialog( CoordGuesserDialog):
-    def __init__(self, parent,iface):
-        #BrowserBase.__init__(self, parent)
-        super().__init__(parent)
-        self.setupUi(self)
-        #################
-        #not a 'connect'#
-        ################
-        self.iface=iface
-        self.canvas = iface.mapCanvas()
-        ###########
-        # connects#
-        ###########
-        self.pushButton_Browse.pressed.connect(lambda: self.getFilePath(0))
-        self.lineEdit_Path.textChanged.connect(self.getCsvHeaders)
-        self.lineEdit_Path.textChanged.connect(self.guessHeaders)
-        self.pushButton_Batch.pressed.connect(self.onBatchPressed)
-        #self.mangledYCheckBox.toggled.connect(lambda: self.onCheckBoxSelected(self.mangledYComboBox, self.mangledXComboBox))
-        #self.guessYCheckBox.pressed.connect(self.isGuessChecked)
-        #self.guessYCheckBox.pressed.connect(lambda: self.onCheckBoxSelected(self.guessYComboBox, self.guessXComboBox))
-
-    """when 'batch!' is pressed this function creates a file with the unscrambled coordinates"""
-    def onBatchPressed(self):
-
-        mangledXIdx = self.mangledXComboBox.currentIndex()
-        mangledYIdx = self.mangledYComboBox.currentIndex()
-        #guessXIdx = self.guessXComboBox.currentIndex()
-        #guessYIdx = self.guessYComboBox.currentIndex()
-        #layerIdx = self.layerComboBox.currentIndex()
-        #fieldIdx = self.fieldComboBox.currentIndex()
-        #valueIdx = self.fieldValueComboBox.currentIndex()
-        # if mangledX\Y isn't chosen (idx 0) -> error
-        if (mangledXIdx == 0 or mangledYIdx == 0):
-            self.iface.messageBar().pushMessage("Error", "Mangled X\Y are required!",
-                                            level=QgsMessageBar.WARNING)
-            return
-        colList = []
-        comboList = self.getComboBoxList()
-        for box in comboList:
-            if box.currentIndex() == 0:
-                colList.append(None)
-            else:
-                #colList.append(box.currentData()) #append the column's number
-                colList.append(box.currentText()) #append the column's header
-        inputPath = self.lineEdit_Path.text()
+    def getInOutPath(self):
+        inputPath = self.lineEdit_filePath.text()
         (dirPath, fileName) = os.path.split(os.path.abspath(inputPath))
         newFileName = "batched_" + fileName
         outputPath = os.path.join(dirPath, newFileName)
-        additionalProj = self.getAdditionalProj()
-        parse_file.parseFile(colList,inputPath,outputPath,additionalProj)
-
-    def getAdditionalProj(self):
-        addProjText = self.lineEdit_addProj.text()
-        if addProjText:
-            if len(addProjText) in range(1,3):
-                try:
-                    myzone = int(addProjText)
-                    return [myzone]
-                except ValueError:
-                    return []
-            elif isinstance(addProjText, str):
-                destproj = osr.SpatialReference()
-                errorInt = destproj.ImportFromProj4(addProjText)
-                if errorInt == 5:
-                    try:
-                        self.iface.messageBar().pushMessage("Error", "Additional projection isn't a valid PROJ.4 string",
-                                                            level=QgsMessageBar.WARNING)
-                    # ver 3.0
-                    except ImportError:
-                        self.iface.messageBar().pushWarning("Error", "Additional projection isn't a valid PROJ.4 string")
-                    return []
-                return [addProjText]
-        return []
-
-    """updates all comboBoxes to csv header"""
-    def getCsvHeaders(self):
-        inputPath = self.lineEdit_Path.text()
-        #fills all comboBoxes with the same list of headers
-        headerList = self.getHeaderList()
-        #warnings.warn("got into getCsvHeaders" + str(headerList))
-        comboBoxList = self.getComboBoxList()
-        if headerList is not None and comboBoxList is not None:
-            for box in comboBoxList:
-                self.insertListToBox(box,headerList)
-        #self.guessHeaders()
-
-    def getComboBoxList(self):
-        return [self.mangledXComboBox,self.mangledYComboBox, self.guessXComboBox, self.guessYComboBox,
-                self.layerComboBox,self.fieldComboBox,self.fieldValueComboBox]
-
-    def getComboBoxNamesList(self):
-        return ["mangled X","mangled Y", "guess X", "guess Y","Layer","field","value"]
-
-    def insertListToBox(self, destinationComboBox, tupleOfLists):
-        destinationComboBox.clear()
-        rowNumList = tupleOfLists[0]
-        valueList = tupleOfLists[1]
-        for i in range(0,len(valueList)):
-            destinationComboBox.addItem(valueList[i],rowNumList[i])
-
-    """ automatically pairs the comboBox and the correct row, if exists """
-    def guessHeaders(self):
-        comboBoxNameList = self.getComboBoxNamesList()
-        comboBoxList = self.getComboBoxList()
-        for i in range (0,len(comboBoxList)):
-            box = comboBoxList[i]
-            boxName = comboBoxNameList[i]
-            index = box.findText(boxName, QtCore.Qt.MatchFixedString)
-            if index >= 0:
-                box.setCurrentIndex(index)
-
-    """ gets header list from chosen .csv file into the dialog window"""
-    def getHeaderList(self):
-        inputPath = self.lineEdit_Path.text()
-        with open(inputPath) as csvfile:
-            csv_reader = csv.reader(csvfile)
-            #reading csv file and getting the first line (header)
-            csv_headings = next(csv_reader)
-            rowNumList=[None]
-            valueList=[""]
-            headingTuple = ()
-            for i in range(0,len(csv_headings)):
-                rowNumList.append(i)
-                valueList.append(csv_headings[i])
-            return (rowNumList,valueList)
+        return (inputPath,outputPath)
 
     """opens the file browser and gets the csv file path from the user"""
-    def getFilePath(self,isShpFile):
-        if isShpFile==0:
+
+    def getFilePath(self, isShpFile):
+        if isShpFile == 0:
             filename1 = QFileDialog.getOpenFileName(self, str("Open File"), "", str("CSV Files (*.csv)"))
             ##filename1 is a tuple, filename[0] is the path, filename[1] is the file type
             if filename1[0] != None:
-                self.lineEdit_Path.setText(filename1[0])
+                self.lineEdit_filePath.setText(filename1[0])
 
         else:
             filename1 = QFileDialog.getOpenFileName(self, str("Open File"), "", str("SHP Files (*.shp)"))
             ##filename1 is a tuple, filename[0] is the path, filename[1] is the file type
             if filename1[0] != None:
-                self.lineEdit_shpPath.setText(filename1[0])
+                self.lineEdit_filePath.setText(filename1[0])
 
-    def isGuessChecked(self, mybool):
-        if mybool is True:
-            self.onCheckBoxSelected(self.guessYComboBox, self.guessXComboBox)
-
-    def isMangledChecked(self, mybool):
-        if mybool is True:
-            self.onCheckBoxSelected(self.mangledYComboBox, self.mangledXComboBox)
-
-    def onCheckBoxSelected(self, currentComboBox, previousComboBox):
-        idx = previousComboBox.currentIndex()
-        currentComboBox.setCurrentIndex(idx+1)
 
 

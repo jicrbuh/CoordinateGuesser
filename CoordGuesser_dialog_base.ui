@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>460</width>
-    <height>550</height>
+    <height>572</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -26,6 +26,87 @@
    <string>CoordGuesser</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <item row="3" column="0">
+    <widget class="QGroupBox" name="groupBox_outputs">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+       <horstretch>1</horstretch>
+       <verstretch>1</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>376</width>
+       <height>111</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>111</height>
+      </size>
+     </property>
+     <property name="title">
+      <string>Outputs:</string>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Best candidate (WGS84 Geo):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="out_xy"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>Distance from guess [degrees]:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="distance"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_9">
+        <property name="text">
+         <string>Method used:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="method_used"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="label_title">
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>39</height>
+      </size>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>24</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Coordinates Guesser</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
    <item row="1" column="0">
     <widget class="QGroupBox" name="groupBox_inputs">
      <property name="sizePolicy">
@@ -38,34 +119,7 @@
       <string>Inputs:</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_6">
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;For example: 34.121,32.1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="text">
-         <string>Scrambled Coordinate:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>XY Delimiter:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_10">
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A valid PROJ.4 string (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;+proj=longlat +datum=WGS84 +no_defs&lt;/span&gt;) or a UTM zone (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;60&lt;/span&gt;)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="text">
-         <string>Additional projection (optional):</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0" colspan="3">
+      <item row="6" column="0" colspan="4">
        <widget class="QGroupBox" name="groupBox">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -226,14 +280,71 @@
         </layout>
        </widget>
       </item>
-      <item row="4" column="0">
-       <widget class="QPushButton" name="pushButton_Batch">
+      <item row="1" column="3">
+       <widget class="QLineEdit" name="xydelim">
         <property name="text">
-         <string>Batch Mode</string>
+         <string>,</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="1" colspan="2">
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="scrambled">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_6">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;For example: 34.121,32.1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Scrambled Coordinate:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_10">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A valid PROJ.4 string (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;+proj=longlat +datum=WGS84 +no_defs&lt;/span&gt;) or a UTM zone (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;60&lt;/span&gt;)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Additional projection (optional):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>XY Delimiter:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QRadioButton" name="radioButton_single">
+        <property name="text">
+         <string>Single Coordinate:</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroup_singleBatch</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QRadioButton" name="radioButton_batch">
+        <property name="text">
+         <string>Batch Mode:</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroup_singleBatch</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="5" column="1" colspan="2">
        <widget class="QLineEdit" name="lineEdit_addProj">
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A valid PROJ.4 string (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;+proj=longlat +datum=WGS84 +no_defs&lt;/span&gt;) or a UTM zone (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;60&lt;/span&gt;)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -243,21 +354,24 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="1" colspan="2">
-       <widget class="QLineEdit" name="xydelim">
+      <item row="3" column="0">
+       <widget class="QLabel" name="label">
         <property name="text">
-         <string>,</string>
+         <string>Browse for csv file:</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="1" colspan="2">
-       <widget class="QLineEdit" name="scrambled">
+      <item row="3" column="1" colspan="2">
+       <widget class="QLineEdit" name="lineEdit_filePath"/>
+      </item>
+      <item row="3" column="3">
+       <widget class="QPushButton" name="pushButton_browse">
         <property name="text">
-         <string/>
+         <string>Browse</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="1" colspan="2">
+      <item row="7" column="0" colspan="4">
        <widget class="QPushButton" name="pushButton_Go">
         <property name="text">
          <string>Go!</string>
@@ -267,89 +381,11 @@
      </layout>
     </widget>
    </item>
-   <item row="2" column="0">
-    <widget class="QGroupBox" name="groupBox_outputs">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-       <horstretch>1</horstretch>
-       <verstretch>1</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="minimumSize">
-      <size>
-       <width>376</width>
-       <height>111</height>
-      </size>
-     </property>
-     <property name="maximumSize">
-      <size>
-       <width>16777215</width>
-       <height>111</height>
-      </size>
-     </property>
-     <property name="title">
-      <string>Outputs:</string>
-     </property>
-     <property name="flat">
-      <bool>false</bool>
-     </property>
-     <layout class="QGridLayout" name="gridLayout_4">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_7">
-        <property name="text">
-         <string>Best candidate (WGS84 Geo):</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="out_xy"/>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_8">
-        <property name="text">
-         <string>Distance from guess [degrees]:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="distance"/>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_9">
-        <property name="text">
-         <string>Method used:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLineEdit" name="method_used"/>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="0" column="0">
-    <widget class="QLabel" name="label_title">
-     <property name="maximumSize">
-      <size>
-       <width>16777215</width>
-       <height>39</height>
-      </size>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>24</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>Coordinates Guesser</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-   </item>
   </layout>
  </widget>
  <resources/>
  <connections/>
+ <buttongroups>
+  <buttongroup name="buttonGroup_singleBatch"/>
+ </buttongroups>
 </ui>
