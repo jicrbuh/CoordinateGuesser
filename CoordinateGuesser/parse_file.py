@@ -6,7 +6,8 @@ from .unmanglerGenerator import *
 from .normalize import normalize
 from .parse import Parse, decToDmsCoor
 from ..utilities import *
-import csv
+import csv, string
+#from string import maketrans
 
 
 def getFeature(layerPath, myField, myValue):
@@ -61,13 +62,15 @@ def parseFileNoCol(input_file,output_file,guessX,guessY, additional_pj=[]):
         for i,row in enumerate(reader): #i is the index of the row
 
             try:
+
                 input_pt = (row[0], row[1])
+
                 if usingGuess:
                     output_pt, unmangler, distance= parseWithGuess(input_pt,(guessX,guessY),additional_pj)
                 else:
                     output_pt, unmangler, distance = parseNoGuess(input_pt)
-                writer.writerow([*input_pt, *center_pt, *output_pt, distance, unmangler])
+                writer.writerow([*input_pt, *center_pt, *output_pt, distance, unmangler,*row[2:]])
                 print("{}: {}, {}, {}".format(i, *output_pt, unmangler, distance))
             except:
-                writer.writerow([row, 'err'])
+                #riter.writerow([row, 'err'])
 
