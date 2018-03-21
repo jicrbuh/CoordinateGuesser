@@ -49,7 +49,7 @@ def parseWithLayer(input_pt, layer, field,value,additional_pj=[]):
 
 def parseFileNoCol(input_file,output_file,guessX,guessY, additional_pj=[]):
     with open(input_file, newline='') as csv_input, open(output_file, 'w', newline='') as csv_output:
-        reader = csv.reader(csv_input, delimiter=',', quotechar='|')
+        reader = csv.reader(csv_input, delimiter=',', quotechar='"')
         writer = csv.writer(csv_output, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
 
         writer.writerow(["mangled X", "mangled Y", "guess X", "guess Y", "unmangled X",
