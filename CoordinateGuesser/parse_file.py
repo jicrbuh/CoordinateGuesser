@@ -72,5 +72,5 @@ def parseFileNoCol(input_file,output_file,guessX,guessY, additional_pj=[]):
                 writer.writerow([*input_pt, *center_pt, *output_pt, distance, unmangler,*row[2:]])
                 print("{}: {}, {}, {}".format(i, *output_pt, unmangler, distance))
             except:
-                #riter.writerow([row, 'err'])
+                writer.writerow([row, 'err'])
 
