@@ -54,7 +54,6 @@ def getLayers(destinationComboBox):
         destinationComboBox.insertItem(float('inf'), layer.name(), layer)
 
 def staticSetCoor(destinationLineEdit,x,y):
-    #self.lineEdit_latLong.setText(f"{x}, {y}")
     destinationLineEdit.setText(f"{x:10.10f}, {y:10.10f}")
 
 #new declaration of ui
@@ -96,13 +95,23 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         ######################
         self.pushButton_Capture.clicked.connect(self.captureButtonClick)
         #self.selectLayerComboBox.currentIndexChanged.connect(self.onLayerSelected)
-        self.selectLayerComboBox.currentIndexChanged.connect(self.getFieldList)
+        self.selectLayerComboBox.activated.connect(self.getFieldList)
         #self.selectFeatureComboBox.currentIndexChanged.connect(self.onFeatureSelected)  #old
-        self.selectFieldComboBox.currentIndexChanged.connect(self.onFieldSelected)
+        self.selectFieldComboBox.activated.connect(self.onFieldSelected)
         self.pushButton_Go.pressed.connect(self.guessCoor)  # if Go! button is pushed, guess the coor using parse
         #self.pushButton_Batch.pressed.connect(self.handleBatchPress)
         self.pushButton_browse.pressed.connect(lambda: self.getFilePath(0))
+        self.checkBox_attr.stateChanged.connect(self.onChangedAttrCheckBox)
 
+
+    def onChangedAttrCheckBox(self,int):
+
+        if int == 2:
+
+            self.selectFeatureComboBox.setEnabled(False)
+        elif int ==0:
+
+            self.selectFeatureComboBox.setEnabled(True)
 
 
     def captureButtonClick(self):
@@ -192,6 +201,8 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         # coortext is the scrambled coor, xydelim is the user's delimiter
         coorText = self.scrambled.text()
         additionProj = self.getAdditionalProj()
+        layer = None
+        field = None
         #print("additionProj: " + str(additionProj))
 
         #single mode
@@ -200,27 +211,41 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
             # if the delimiter isn't found in the user's scrambled text an error message
             try:
                 (x, y) = re.split(self.xydelim.text(), coorText, 1)
+                (x,y) = (x.strip(),y.strip())
             except ValueError:
                 self.changeMessage("ERROR: XY delimiter not found in scrambled coor")
                 return
 
-            if self.noGivenRadioButton.isChecked() == True:
-                output_guesses = Parse((x, y),None,additionProj) #uncomment if you don't want parse to split the str coortext
-                #output_guesses = Parse(coorText, delimiter=self.xydelim.text())
-                self.showOutputs(output_guesses,isguess=False)
+            try:
+                if self.noGivenRadioButton.isChecked() == True:
+                    output_guesses = Parse((x, y),None,layer,field,additionProj) #uncomment if you don't want parse to split the str coortext
+                    #output_guesses = Parse(coorText, delimiter=self.xydelim.text())
+                    self.showOutputs(output_guesses,isguess=False)
 
-            if self.fromMapRadioButton.isChecked() == True:
-                (guessX,guessY) = self.lineEdit_latLong.text().split(', ') #guess is the point the user clicked
-                (guessX, guessY) = (float(guessX),float(guessY))
-                output_guesses = Parse((x, y), (guessX,guessY),additionProj)
-                self.showOutputs(output_guesses)
+                if self.fromMapRadioButton.isChecked() == True:
+                    (guessX,guessY) = self.lineEdit_latLong.text().split(', ') #guess is the point the user clicked
+                    (guessX, guessY) = (float(guessX),float(guessY))
+                    output_guesses = Parse((x, y), (guessX,guessY),layer,field,additionProj)
+                    self.showOutputs(output_guesses)
 
-            if self.fromLayerRadioButton.isChecked() == True:
-                (guessX,guessY) = self.selectFeatureComboBox.currentData() #guess is the centroid of selected feature
-                output_guesses = Parse((x, y), (float(guessX),float(guessY)), additionProj)
-                self.showOutputs(output_guesses)
+                if self.fromLayerRadioButton.isChecked() == True:
+                    (guessX,guessY) = self.selectFeatureComboBox.currentData() #guess is the centroid of selected feature
+                    output_guesses = Parse((x, y), (float(guessX),float(guessY)),layer,field, additionProj)
+                    self.showOutputs(output_guesses)
+            except:
+                self.changeMessage("ERROR: Could not parse coordinate")
+                self.clearOutpus()
         #batch mode
         else:
+            if self.checkBox_attr.isChecked():
+                layer = self.selectLayerComboBox.currentData()
+                path = layer.dataProvider().dataSourceUri()
+                path = path[:path.rfind('|')]
+                layer = path
+
+                field = self.selectFieldComboBox.currentText()
+                print(path + " "+field)
+
             inputPath,outpuPath = self.getInOutPath()
             guessX, guessY = (None,None)
             if self.fromMapRadioButton.isChecked() == True:
@@ -228,7 +253,9 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
                 (guessX, guessY) = (float(guessX), float(guessY))
             if self.fromLayerRadioButton.isChecked() == True:
                 (guessX, guessY) = self.selectFeatureComboBox.currentData()  # guess is the centroid of selected feature
-            parse_file.parseFileNoCol(inputPath,outpuPath,guessX,guessY,additionProj)
+
+            parse_file.parseFileNoCol(inputPath,outpuPath,guessX,guessY,layer,field,additionProj)
+            self.clearOutpus()
             self.changeMessage("File created successfully at: " + outpuPath)
 
     def getAdditionalProj(self):
@@ -267,6 +294,11 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
             self.out_xy.setText(f"{output_pt[0]:10.10f}, {output_pt[1]:10.10f}")
             self.distance.setText(f"No guess given")
             self.method_used.setText(unmangler)
+
+    def clearOutpus(self):
+        self.out_xy.setText("")
+        self.distance.setText("")
+        self.method_used.setText("")
 
     """shows the browsing window after clicking on batch Mode"""
     def handleBatchPress(self):
