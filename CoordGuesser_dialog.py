@@ -103,6 +103,8 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         #self.pushButton_Batch.pressed.connect(self.handleBatchPress)
         self.pushButton_browse.pressed.connect(lambda: self.getFilePath(0))
 
+
+
     def captureButtonClick(self):
         self.canvas.setMapTool(self.coorTool)
         self.coorTool.clean()
@@ -112,8 +114,8 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         #changed the number format to include less digits after the decimal point
         self.lineEdit_latLong.setText(f"{x:10.10f}, {y:10.10f}")
 
-    def trysetCoor(self, lineEdit):
-        return staticSetCoor(lineEdit,x,y)
+    #def trysetCoortrysetCoor(self, lineEdit):
+        #return staticSetCoor(lineEdit,x,y)
 
     #"""gets all the layers in the map into the combobox"""
     #def getLayers(self):
@@ -190,23 +192,18 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         # coortext is the scrambled coor, xydelim is the user's delimiter
         coorText = self.scrambled.text()
         additionProj = self.getAdditionalProj()
-        print("additionProj: " + str(additionProj))
+        #print("additionProj: " + str(additionProj))
 
-
+        #single mode
         if self.radioButton_single.isChecked():
             # (x, y) = re.split(self.xydelim.text(), coorText, 1)
             # if the delimiter isn't found in the user's scrambled text an error message
             try:
                 (x, y) = re.split(self.xydelim.text(), coorText, 1)
             except ValueError:
-                # ver 2.9
-                try:
-                    self.iface.messageBar().pushMessage("Error", "XY delimiter not found in scrambled coor",
-                                                        level=QgsMessageBar.WARNING)
-                # ver 3.0
-                except ImportError:
-                    self.iface.messageBar().pushWarning("Error", "XY delimiter not found in scrambled coor")
+                self.changeMessage("ERROR: XY delimiter not found in scrambled coor")
                 return
+
             if self.noGivenRadioButton.isChecked() == True:
                 output_guesses = Parse((x, y),None,additionProj) #uncomment if you don't want parse to split the str coortext
                 #output_guesses = Parse(coorText, delimiter=self.xydelim.text())
@@ -232,7 +229,7 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
             if self.fromLayerRadioButton.isChecked() == True:
                 (guessX, guessY) = self.selectFeatureComboBox.currentData()  # guess is the centroid of selected feature
             parse_file.parseFileNoCol(inputPath,outpuPath,guessX,guessY,additionProj)
-            pass
+            self.changeMessage("File created successfully at: " + outpuPath)
 
     def getAdditionalProj(self):
         addProjText = self.lineEdit_addProj.text()
@@ -247,13 +244,9 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
                 destproj = osr.SpatialReference()
                 errorInt = destproj.ImportFromProj4(addProjText)
                 if errorInt == 5:
-                    try:
-                        self.iface.messageBar().pushMessage("Error", "Additional projection isn't a valid PROJ.4 string",
-                                                            level=QgsMessageBar.WARNING)
-                    # ver 3.0
-                    except ImportError:
-                        self.iface.messageBar().pushWarning("Error", "Additional projection isn't a valid PROJ.4 string")
+                    self.changeMessage("ERROR: Additional projection isn't a valid PROJ.4 string")
                     return []
+
                 return [addProjText]
         return []
 
@@ -310,5 +303,12 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
             if filename1[0] != None:
                 self.lineEdit_filePath.setText(filename1[0])
 
+
+    def changeMessage(self, mytext):
+        self.label_message.setText(mytext)
+        QTimer.singleShot(8000, self.resetMessage)
+
+    def resetMessage(self):
+        self.label_message.setText("")
 
 
