@@ -63,25 +63,25 @@ def parseFileNoCol(input_file,output_file,guessX,guessY,layer=None, field = None
 
         for i,row in enumerate(reader): #i is the index of the row
 
-            #try:
+            try:
 
-            input_pt = (row[0], row[1])
+                input_pt = (row[0], row[1])
 
-            if usingGuess:
-                output_pt, unmangler, distance= parseWithGuess(input_pt,(guessX,guessY),additional_pj)
-            elif usingField:
-                attr = row[2]
-                center_pt = getFeature(layer,field,attr)
-                output_pt, unmangler, distance = parseWithGuess(input_pt, center_pt, additional_pj)
-            else:
-                output_pt, unmangler, distance = parseNoGuess(input_pt)
+                if usingGuess:
+                    output_pt, unmangler, distance= parseWithGuess(input_pt,(guessX,guessY),additional_pj)
+                elif usingField:
+                    attr = row[2]
+                    center_pt = getFeature(layer,field,attr)
+                    output_pt, unmangler, distance = parseWithGuess(input_pt, center_pt, additional_pj)
+                else:
+                    output_pt, unmangler, distance = parseNoGuess(input_pt)
 
-            if usingField:
-                writer.writerow([*input_pt, *center_pt, *output_pt, distance, unmangler,additional_pj, *row[3:]])
-            else:
-                writer.writerow([*input_pt, *center_pt, *output_pt, distance, unmangler,additional_pj, *row[2:]])
+                if usingField:
+                    writer.writerow([*input_pt, *center_pt, *output_pt, distance, unmangler,additional_pj, *row[3:]])
+                else:
+                    writer.writerow([*input_pt, *center_pt, *output_pt, distance, unmangler,additional_pj, *row[2:]])
 
-            print("{}: {}, {}, {}".format(i, *output_pt, unmangler, distance))
-            #except:
-                #writer.writerow(["error","","","","","","","","",*row])
+                print("{}: {}, {}, {}".format(i, *output_pt, unmangler, distance))
+            except:
+                writer.writerow(["error","","","","","","","","",*row])
 

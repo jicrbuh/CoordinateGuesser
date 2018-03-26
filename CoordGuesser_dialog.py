@@ -30,8 +30,7 @@ from .getCoordinateTool import getCoordinateTool
 from qgis.gui import QgsVertexMarker
 
 from .utilities import *
-from qgis.core import QgsProject
-from qgis.core import QgsMapLayer
+from qgis.core import QgsProject, QgsPointXY, QgsMapLayer
 from qgis.gui import QgsMessageBar
 from PyQt5.QtCore import *
 
@@ -85,21 +84,23 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         self.iface = iface
         getLayers(self.selectLayerComboBox)
         #todo use staticSetCoor for self.coorTool
-        m = QgsVertexMarker(self.canvas)
-        self.VMarker = m
+        self.VMarker = QgsVertexMarker(self.canvas)
         self.VMarker.hide()
         self.coorTool = getCoordinateTool(self,self.canvas,self.setCoor, QgsProject.instance(),self.VMarker)
+        #unmangledMarker = QgsVertexMarker(self.canvas)
+        self.unmangledMarker = QgsVertexMarker(self.canvas)
+        self.unmangledMarker.setColor(Qt.blue)
+        self.unmangledMarker.hide()
+        self.unmangledMarker.setPenWidth(3)
+        self.VMarker.setPenWidth(3)
 
         ######################
         ######connects#######
         ######################
         self.pushButton_Capture.clicked.connect(self.captureButtonClick)
-        #self.selectLayerComboBox.currentIndexChanged.connect(self.onLayerSelected)
         self.selectLayerComboBox.activated.connect(self.getFieldList)
-        #self.selectFeatureComboBox.currentIndexChanged.connect(self.onFeatureSelected)  #old
         self.selectFieldComboBox.activated.connect(self.onFieldSelected)
         self.pushButton_Go.pressed.connect(self.guessCoor)  # if Go! button is pushed, guess the coor using parse
-        #self.pushButton_Batch.pressed.connect(self.handleBatchPress)
         self.pushButton_browse.pressed.connect(lambda: self.getFilePath(0))
         self.checkBox_attr.stateChanged.connect(self.onChangedAttrCheckBox)
 
@@ -218,19 +219,19 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
 
             try:
                 if self.noGivenRadioButton.isChecked() == True:
-                    output_guesses = Parse((x, y),None,layer,field,additionProj) #uncomment if you don't want parse to split the str coortext
+                    output_guesses = Parse((x, y),None,additionProj) #uncomment if you don't want parse to split the str coortext
                     #output_guesses = Parse(coorText, delimiter=self.xydelim.text())
                     self.showOutputs(output_guesses,isguess=False)
 
                 if self.fromMapRadioButton.isChecked() == True:
                     (guessX,guessY) = self.lineEdit_latLong.text().split(', ') #guess is the point the user clicked
                     (guessX, guessY) = (float(guessX),float(guessY))
-                    output_guesses = Parse((x, y), (guessX,guessY),layer,field,additionProj)
+                    output_guesses = Parse((x, y), (guessX,guessY),additionProj)
                     self.showOutputs(output_guesses)
 
                 if self.fromLayerRadioButton.isChecked() == True:
                     (guessX,guessY) = self.selectFeatureComboBox.currentData() #guess is the centroid of selected feature
-                    output_guesses = Parse((x, y), (float(guessX),float(guessY)),layer,field, additionProj)
+                    output_guesses = Parse((x, y), (float(guessX),float(guessY)), additionProj)
                     self.showOutputs(output_guesses)
             except:
                 self.changeMessage("ERROR: Could not parse coordinate")
@@ -289,11 +290,16 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
             self.out_xy.setText(f"{output_pt[0]:10.10f}, {output_pt[1]:10.10f}")
             self.distance.setText(f"{distance:10.10f}")
             self.method_used.setText(unmangler)
+
+
         else:
             output_pt, unmangler = first_guess[0],first_guess[1]
             self.out_xy.setText(f"{output_pt[0]:10.10f}, {output_pt[1]:10.10f}")
             self.distance.setText(f"No guess given")
             self.method_used.setText(unmangler)
+        unmangledPt = QgsPointXY(float(output_pt[0]), float(output_pt[1]))
+        self.unmangledMarker.setCenter(unmangledPt)
+        self.unmangledMarker.show()
 
     def clearOutpus(self):
         self.out_xy.setText("")
@@ -312,6 +318,7 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
     """on closing the main window, the red marker is deleted"""
     def closeEvent(self, event):
         self.canvas.scene().removeItem(self.VMarker)
+        self.canvas.scene().removeItem(self.unmangledMarker)
 
     def getInOutPath(self):
         inputPath = self.lineEdit_filePath.text()
