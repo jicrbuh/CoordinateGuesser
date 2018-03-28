@@ -10,6 +10,8 @@ the plugin will give you the best result for the unmangled coordinate, chosen by
 If you don't know to which area the coordinate should map, you can choose the "No Given Guess" option, but the result will be chosen randomly, so it is not reccomended.
 The guess can be chosen by clicking on the map (By a given Long, Lat) or by choosing a feature in layer (By a centroid of a feature from layer).
 
+
+### Batch Mode
 If you have a list of scrambled coordinates, you can use the Batch Mode option, by choosing a .csv file that has in each row a different coordinate, 
 so the first column contains the x coordinate, and the second contains the y coordinate. 
 If you choose using a guess (By a given Long, Lat or By a centroid of a feature from layer), it will be uniform to all of the points in the file.
