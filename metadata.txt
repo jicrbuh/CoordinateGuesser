@@ -9,7 +9,7 @@
 [general]
 name=CoordGuesser
 qgisMinimumVersion=3.0
-description=Unscrambles, parse and guess coordinates
+description=This plugin parses misstyped or scrambled coordinates from different projections to WGS84-Geo. For example, DMS and partial DMS (148 - 11' 7", 23 - 29' 24"), Commas instead of points (40°38'51,14", 40°38'50,67"), UTM without a zone and missing the leftmost digit (?90950,3431318.8)
 version=0.9
 author=Ben Avrahami, Idan Miara and Chen Barnoy
 email=jicrbuh1@gmail.com
