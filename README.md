@@ -17,3 +17,11 @@ so the first column contains the x coordinate, and the second contains the y coo
 If you choose using a guess (By a given Long, Lat or By a centroid of a feature from layer), it will be uniform to all of the points in the file.
 This is unless you choose the option "Attribute choice in file" and then for each row, the third column will contain the name of the attribute,
 and the guess will be different for every scarmbled coordinate, and will be chosen by the centroid of the matching feature (if exists).
+#### Batch Mode Example
+For example, use the batch mode with the example file in the plugin folder (/help/example/example_ny_boroughs.csv).   
+The file is in the format:  
+_mangled X_, _mangled Y_, _Attribute_  
+Open Qgis and open the example .shp file (/help/example/ny_boroughs.shp) in the curren project.  
+Open Coordinate Guesser and fill the preferences as in the picture (the .csv file path may be different on your computer):  
+
+press "Go!"
