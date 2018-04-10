@@ -21,7 +21,8 @@ and the guess will be different for every scarmbled coordinate, and will be chos
 For example, use the batch mode with the example file in the plugin folder (/help/example/example_ny_boroughs.csv).   
 The file is in the format:  
 _mangled X_, _mangled Y_, _Attribute_  
-Open Qgis and open the example .shp file (/help/example/ny_boroughs.shp) in the curren project.  
-Open Coordinate Guesser and fill the preferences as in the picture (the .csv file path may be different on your computer):  
+* Open Qgis and open the example .shp file (/help/example/ny_boroughs.shp) in a new project.  
+* Open Coordinate Guesser and fill the preferences as in the picture (the .csv file path may be different on your computer):  
+![Preferenced for the example](https://github.com/jicrbuh/CoordinateGuesser/blob/master/help/example/CoorGuesser_batch_example.png)  
 
-press "Go!"
+* press "Go!"
