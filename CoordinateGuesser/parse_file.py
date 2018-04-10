@@ -19,7 +19,8 @@ def getFeature(layerPath, myField, myValue):
 
     for feature in layer:
         print(myValue + " " + feature.GetField(myField))
-        if (feature.GetField(myField) == myValue or feature.GetField(myField) == float(myValue)):
+        #if (feature.GetField(myField) == myValue or feature.GetField(myField) == float(myValue)):
+        if (feature.GetField(myField) == myValue):
             geom = feature.GetGeometryRef()
             (x, y) = ogrCoorTransform(geom.Centroid(), spatialRef)
             break
@@ -58,7 +59,7 @@ def parseFileNoCol(input_file,output_file,guessX,guessY,layer=None, field = None
         usingGuess = guessY and guessX
         if usingGuess:
             center_pt = (guessX,guessY)
-
+        #if there's layer and field then we use the third column
         usingField = layer and field
 
         for i,row in enumerate(reader): #i is the index of the row

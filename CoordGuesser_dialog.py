@@ -103,10 +103,11 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         self.pushButton_Go.pressed.connect(self.guessCoor)  # if Go! button is pushed, guess the coor using parse
         self.pushButton_browse.pressed.connect(lambda: self.getFilePath(0))
         self.checkBox_attr.stateChanged.connect(self.onChangedAttrCheckBox)
+        self.selectFeatureComboBox.activated.connect(self.onFeatureSelected)
 
 
     def onChangedAttrCheckBox(self,int):
-
+        self.fromLayerRadioButton.setChecked(True)
         if int == 2:
 
             self.selectFeatureComboBox.setEnabled(False)
@@ -116,6 +117,7 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
 
 
     def captureButtonClick(self):
+        self.fromMapRadioButton.setChecked(True)
         self.canvas.setMapTool(self.coorTool)
         self.coorTool.clean()
 
@@ -147,6 +149,7 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         #self.getFieldList(0)
 
     def getFieldList(self, ind):
+        self.fromLayerRadioButton.setChecked(True)
         # todo https://gis.stackexchange.com/questions/212618/check-particular-feature-exists-using-pyqgis
         #warnings.warn("GetFieldsList")
         selectedLayer = self.selectLayerComboBox.currentData()
@@ -159,20 +162,25 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
 
     """after the user selects a field from the combobox, the feature combobox updates with the field values"""
     def onFieldSelected(self,ind):
+        self.fromLayerRadioButton.setChecked(True)
         self.selectFeatureComboBox.clear()
         selectedLayer = self.selectLayerComboBox.currentData()
         selectedField = self.selectFieldComboBox.currentData()
         selectedFieldName = self.selectFieldComboBox.currentText()
+        layerCRS = selectedLayer.crs()
         #index = selectedLayer.fieldNameIndex(selectedField)
         features = selectedLayer.getFeatures()
         if selectedFieldName:
             for feature in features:
                 myattr = feature.attribute(selectedFieldName)
                 ctrPoint = feature.geometry().centroid().asPoint()
-                self.selectFeatureComboBox.insertItem(float('inf'), str(myattr), ctrPoint)
+                #print(str(ctrPoint))
+                (x, y) = coorTransform(ctrPoint, layerCRS, QgsProject.instance())
+                self.selectFeatureComboBox.insertItem(float('inf'), str(myattr), (x,y))
 
-    """gets all the features (and their center coor) for the selected layer"""
+
     def getFeatures(self, mylayer):
+        """gets all the features (and their center coor) for the selected layer"""
         def describe(feature):
             fieldCount = len(feature.fields())
             return ", ".join(str(feature[i]) for i in range(fieldCount))
@@ -189,14 +197,15 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
 
     def onFeatureSelected(self, int):
         centerPoint = self.selectFeatureComboBox.currentData()
+        (x1,y1) = self.selectFeatureComboBox.currentData()
         selectedLayer = self.selectLayerComboBox.currentData()
         layerCRS = selectedLayer.crs()
-        if centerPoint is None:
-            (x, y) = coorTransform(selectedLayer.extent().center(), layerCRS, QgsProject.instance())
-        else:
-            (x,y) = coorTransform(centerPoint, layerCRS, QgsProject.instance())
+        #if centerPoint is None:
+         #   (x, y) = coorTransform(selectedLayer.extent().center(), layerCRS, QgsProject.instance())
+       # else:
+       #     (x,y) = coorTransform(centerPoint, layerCRS, QgsProject.instance())
         #this line changes the coor in the lineEdit_latLong
-        self.setCoor(x,y)
+        staticSetCoor(self.lineEdit_centroid,x1,y1)
 
     def guessCoor(self):
         # coortext is the scrambled coor, xydelim is the user's delimiter
@@ -230,7 +239,7 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
                     self.showOutputs(output_guesses)
 
                 if self.fromLayerRadioButton.isChecked() == True:
-                    (guessX,guessY) = self.selectFeatureComboBox.currentData() #guess is the centroid of selected feature
+                    (guessX,guessY) = self.lineEdit_centroid.text().split(', ') #guess is the centroid of selected feature
                     output_guesses = Parse((x, y), (float(guessX),float(guessY)), additionProj)
                     self.showOutputs(output_guesses)
             except:
@@ -239,6 +248,8 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         #batch mode
         else:
             if self.checkBox_attr.isChecked():
+                print("attr is checked")
+
                 layer = self.selectLayerComboBox.currentData()
                 path = layer.dataProvider().dataSourceUri()
                 path = path[:path.rfind('|')]
@@ -246,14 +257,14 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
 
                 field = self.selectFieldComboBox.currentText()
                 print(path + " "+field)
-
+            #todo check why all guesses are uniform and don't change according to row
             inputPath,outpuPath = self.getInOutPath()
             guessX, guessY = (None,None)
             if self.fromMapRadioButton.isChecked() == True:
                 (guessX, guessY) = self.lineEdit_latLong.text().split(', ')  # guess is the point the user clicked
                 (guessX, guessY) = (float(guessX), float(guessY))
-            if self.fromLayerRadioButton.isChecked() == True:
-                (guessX, guessY) = self.selectFeatureComboBox.currentData()  # guess is the centroid of selected feature
+            if self.fromLayerRadioButton.isChecked() == True and self.checkBox_attr.isChecked() == False:
+                (guessX, guessY) = self.lineEdit_centroid.text().split(', ')  # guess is the centroid of selected feature
 
             parse_file.parseFileNoCol(inputPath,outpuPath,guessX,guessY,layer,field,additionProj)
             self.clearOutpus()
@@ -330,6 +341,7 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
     """opens the file browser and gets the csv file path from the user"""
 
     def getFilePath(self, isShpFile):
+        self.radioButton_batch.setChecked(True)
         if isShpFile == 0:
             filename1 = QFileDialog.getOpenFileName(self, str("Open File"), "", str("CSV Files (*.csv)"))
             ##filename1 is a tuple, filename[0] is the path, filename[1] is the file type

@@ -6,6 +6,7 @@ class Unmangler:
             yUnmangler = xUnmangler
         self.x = xUnmangler
         self.y = yUnmangler
+
     def can(self,x,y):
         ret, cx = self.x.can(x)
         if ret == -1 or ret == 1:
@@ -14,8 +15,10 @@ class Unmangler:
         if ret == -1 or ret == 0:
             return False, None, None
         return True, cx, cy
+
     def toCor(self,x,cx,y,cy):
         return self.x.toHalfCor(x, cx), self.y.toHalfCor(y, cy)
+    
     def __str__(self):
         if self.x == self.y:
             halcore = str(self.x)
@@ -27,9 +30,11 @@ class UtmUnmangler (Unmangler):
     def __init__(self, projstring, xUnmangler, yUnmangler=None):
         Unmangler.__init__(self, xUnmangler, yUnmangler)
         self.projstring = projstring
+
     def toCor(self,x,cx,y,cy):
         ux, uy = Unmangler.toCor(self,x,cx,y,cy)
         return self.convertToGeo(ux,uy)
+
     def convertToGeo(self,ux,uy):
         destproj = osr.SpatialReference()
         destproj.ImportFromProj4("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
@@ -40,6 +45,7 @@ class UtmUnmangler (Unmangler):
         t = transform.TransformPoint(ux, uy)
         dx, dy, _ = t
         return dx, dy
+
     def __str__(self):
         if self.x == self.y:
             halcore = str(self.x)

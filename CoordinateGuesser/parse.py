@@ -55,7 +55,7 @@ def Parse(inp, approxPoint = None, additionalprojs = [],delimiter = '[\t,]'):
 
     if approxPoint is None:
         return suspects
-    #todo does that mean that the distance is always in meters?
+
     destproj = osr.SpatialReference()
     destproj.ImportFromProj4("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
 

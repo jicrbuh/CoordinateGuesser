@@ -22,6 +22,7 @@ class concattedDMS:
         mm = int(x[lend:lend+2])
         ss = int(x[lend+2:])
         return sign*dd,sign*mm,sign*ss
+
     def can(self, x):
         x, sign, pos = extractSignfromGeo(x)
         try:
@@ -37,6 +38,7 @@ class concattedDMS:
         if d > 90 or d < -90:
             pos = 0
         return pos, (d,m,s,sign)
+
     def toHalfCor(self, x, canval):
         d,m,s,sign = canval
         return (d+(m+s/60.0)/60.0) * sign
