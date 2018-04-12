@@ -30,7 +30,7 @@
     <widget class="QGroupBox" name="groupBox_outputs">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-       <horstretch>1</horstretch>
+       <horstretch>2</horstretch>
        <verstretch>1</verstretch>
       </sizepolicy>
      </property>
@@ -89,7 +89,7 @@
    <item row="1" column="0">
     <widget class="QGroupBox" name="groupBox_inputs">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
        <horstretch>2</horstretch>
        <verstretch>2</verstretch>
       </sizepolicy>
@@ -101,7 +101,7 @@
       <item row="7" column="0" colspan="5">
        <widget class="QGroupBox" name="groupBox">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>2</horstretch>
           <verstretch>2</verstretch>
          </sizepolicy>
