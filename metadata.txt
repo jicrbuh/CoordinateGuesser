@@ -10,7 +10,7 @@
 name=CoordGuesser
 qgisMinimumVersion=3.0
 description=Unscrambles, parses and guesses coordinates.
-version=0.9
+version=1.0
 author=Ben Avrahami, Idan Miara and Chen Barnoy
 email=jicrbuh1@gmail.com
 
