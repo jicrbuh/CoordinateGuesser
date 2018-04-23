@@ -51,6 +51,8 @@ def getLayers(destinationComboBox):
     for layer in vectorList:
         #comboBox.insertItem(float('inf'), layer.name(), layer)
         destinationComboBox.insertItem(float('inf'), layer.name(), layer)
+    destinationComboBox.setCurrentIndex(0)
+    self.getFieldList()
 
 def staticSetCoor(destinationLineEdit,x,y):
     destinationLineEdit.setText(f"{x:10.10f}, {y:10.10f}")
@@ -82,7 +84,7 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         ################
         self.canvas = iface.mapCanvas()
         self.iface = iface
-        getLayers(self.selectLayerComboBox)
+        self.getLayers(self.selectLayerComboBox)
         #todo use staticSetCoor for self.coorTool
         self.VMarker = QgsVertexMarker(self.canvas)
         self.VMarker.hide()
@@ -98,13 +100,12 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         ######connects#######
         ######################
         self.pushButton_Capture.clicked.connect(self.captureButtonClick)
-        self.selectLayerComboBox.activated.connect(self.getFieldList)
+        self.selectLayerComboBox.currentIndexChanged.connect(self.getFieldList)
         self.selectFieldComboBox.activated.connect(self.onFieldSelected)
         self.pushButton_Go.pressed.connect(self.guessCoor)  # if Go! button is pushed, guess the coor using parse
         self.pushButton_browse.pressed.connect(lambda: self.getFilePath(0))
         self.checkBox_attr.stateChanged.connect(self.onChangedAttrCheckBox)
         self.selectFeatureComboBox.activated.connect(self.onFeatureSelected)
-
 
     def onChangedAttrCheckBox(self,int):
         self.fromLayerRadioButton.setChecked(True)
@@ -115,32 +116,31 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
 
             self.selectFeatureComboBox.setEnabled(True)
 
-
     def captureButtonClick(self):
         self.fromMapRadioButton.setChecked(True)
         self.canvas.setMapTool(self.coorTool)
         self.coorTool.clean()
 
     def setCoor(self,x,y):
-        #self.lineEdit_latLong.setText(f"{x}, {y}")
-        #changed the number format to include less digits after the decimal point
         self.lineEdit_latLong.setText(f"{x:10.10f}, {y:10.10f}")
 
-    #def trysetCoortrysetCoor(self, lineEdit):
-        #return staticSetCoor(lineEdit,x,y)
+    def getLayers(self, destinationComboBox):
+        layersDict = QgsProject.instance().mapLayers()
+        allLayers = list(layersDict.values())
+        destinationComboBox.clear()
+        vectorList = []
+        for layer in allLayers:
+            if layer.type() == QgsMapLayer.VectorLayer:
+                # allLayers.remove(layer)
+                vectorList.append(layer)
+        for layer in vectorList:
+            # comboBox.insertItem(float('inf'), layer.name(), layer)
+            destinationComboBox.insertItem(float('inf'), layer.name(), layer)
+        destinationComboBox.setCurrentIndex(0)
+        self.getFieldList(0)
 
-    #"""gets all the layers in the map into the combobox"""
-    #def getLayers(self):
-   #     layersDict = QgsProject.instance().mapLayers()
-    #    allLayers = list(layersDict.values())
-    #    self.selectLayerComboBox.clear()
-    #    for layer in allLayers:
-    #        #comboBox.insertItem(float('inf'), layer.name(), layer)
-     #       self.selectLayerComboBox.insertItem(float('inf'), layer.name(), layer)
-
-    """gets all the features of a selected layer into the combobox"""
     def onLayerSelected(self, ind):
-        #warnings.warn("onLayerSelected")
+        """gets all the features of a selected layer into the combobox"""
         selectedLayer = self.selectLayerComboBox.currentData()
         features = self.getFeatures(selectedLayer)
         self.selectFeatureComboBox.clear()
@@ -151,7 +151,6 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
     def getFieldList(self, ind):
         self.fromLayerRadioButton.setChecked(True)
         # todo https://gis.stackexchange.com/questions/212618/check-particular-feature-exists-using-pyqgis
-        #warnings.warn("GetFieldsList")
         selectedLayer = self.selectLayerComboBox.currentData()
         fieldList = []
         fields = selectedLayer.fields()
@@ -159,9 +158,11 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         for field in fields:
             warnings.warn(str(field.name()))
             self.selectFieldComboBox.insertItem(float('inf'), field.name(), field)
+        self.selectFieldComboBox.setCurrentIndex(0)
+        self.onFieldSelected(0)
 
-    """after the user selects a field from the combobox, the feature combobox updates with the field values"""
     def onFieldSelected(self,ind):
+        """after the user selects a field from the combobox, the feature combobox updates with the field values"""
         self.fromLayerRadioButton.setChecked(True)
         self.selectFeatureComboBox.clear()
         selectedLayer = self.selectLayerComboBox.currentData()
@@ -177,7 +178,7 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
                 #print(str(ctrPoint))
                 (x, y) = coorTransform(ctrPoint, layerCRS, QgsProject.instance())
                 self.selectFeatureComboBox.insertItem(float('inf'), str(myattr), (x,y))
-
+        self.selectFeatureComboBox.setCurrentIndex(0)
 
     def getFeatures(self, mylayer):
         """gets all the features (and their center coor) for the selected layer"""
@@ -257,7 +258,7 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
 
                 field = self.selectFieldComboBox.currentText()
                 print(path + " "+field)
-            #todo check why all guesses are uniform and don't change according to row
+
             inputPath,outpuPath = self.getInOutPath()
             guessX, guessY = (None,None)
             if self.fromMapRadioButton.isChecked() == True:
@@ -302,7 +303,6 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
             self.distance.setText(f"{distance:10.10f}")
             self.method_used.setText(unmangler)
 
-
         else:
             output_pt, unmangler = first_guess[0],first_guess[1]
             self.out_xy.setText(f"{output_pt[0]:10.10f}, {output_pt[1]:10.10f}")
@@ -317,17 +317,11 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         self.distance.setText("")
         self.method_used.setText("")
 
-    """shows the browsing window after clicking on batch Mode"""
-    def handleBatchPress(self):
-        # keep a reference to the Batch Browse ui
-        self.browsing = BrowserDialog(self,self.iface)
-        self.browsing.show()
-
     def visChange(self, visible):
         self.tell(visible)
 
-    """on closing the main window, the red marker is deleted"""
     def closeEvent(self, event):
+        """on closing the main window, deleting the markers"""
         self.canvas.scene().removeItem(self.VMarker)
         self.canvas.scene().removeItem(self.unmangledMarker)
 
@@ -338,9 +332,9 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         outputPath = os.path.join(dirPath, newFileName)
         return (inputPath,outputPath)
 
-    """opens the file browser and gets the csv file path from the user"""
 
     def getFilePath(self, isShpFile):
+        """opens the file browser and gets the csv file path from the user"""
         self.radioButton_batch.setChecked(True)
         if isShpFile == 0:
             filename1 = QFileDialog.getOpenFileName(self, str("Open File"), "", str("CSV Files (*.csv)"))

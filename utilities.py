@@ -5,19 +5,19 @@ from qgis.core import QgsProject, QgsCoordinateReferenceSystem, QgsCoordinateTra
 from osgeo import ogr, osr
 import os, warnings
 
-"""coordinate transform using qgis"""
 def coorTransform( pos, crsSrc,projectInstance):
 
+    """coordinate transform using qgis"""
     crsDest = QgsCoordinateReferenceSystem(4326)
     #todo http://osgeo-org.1560.x6.nabble.com/QGIS-Developer-QGIS3-QgsCoordinateTransform-Error-td5347648.html
     xform = QgsCoordinateTransform(crsSrc, crsDest,projectInstance)
     pos = xform.transform(pos)
     return (pos.x(),pos.y())
 
-"""transorms to geo wgs84 using ogr. inputs are OGRPoint point and the layer SpatialRef.
-output is float (x,y) as a tuple"""
-def ogrCoorTransform (point, inSpatialRef):
 
+def ogrCoorTransform (point, inSpatialRef):
+    """transorms to geo wgs84 using ogr. inputs are OGRPoint point and the layer SpatialRef.
+    output is float (x,y) as a tuple"""
     outSpatialRef = osr.SpatialReference()
     outSpatialRef.ImportFromEPSG(4326)
     coordTrans = osr.CoordinateTransformation(inSpatialRef, outSpatialRef)
@@ -29,4 +29,3 @@ def ogrCoorTransform (point, inSpatialRef):
     #warnings.warn("x,y: " + str(point.GetX())+ ", "+ str(point.GetY()))
     #warnings.warn("clone x,y: " + str(clonepoint.GetX()) + ", " + str(clonepoint.GetY()))
     return (clonepoint.GetX(),clonepoint.GetY())
-

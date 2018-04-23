@@ -2,7 +2,8 @@ from .halfCorUnmanglers import *
 from .unmanglerGenerator import *
 from ogr import Geometry, wkbPoint
 from .normalize import normalize
-import osr
+from pyproj import Geod
+import osr, math
 import warnings
 
 def genUnmanglers(additionalutmprojs):
@@ -33,10 +34,18 @@ def dist(p1, p2, transform):
     op = Geometry(wkbPoint)
     op.AddPoint(*p1)
     op.TransformTo(transform)
-
+    #print("distance: " + str(op.Distance(p2)))
     return op.Distance(p2)
 
-#todo make this more visible
+def distInMeters(p1, p2, transform):
+    x1,y1=p1[0],p1[1]
+
+    x2,y2=p2[0],p2[1]
+    g = Geod(ellps='WGS84')  # Use WGS84 ellipsoid
+    az12, az21, dist = g.inv(x1, y1, x2, y2)
+    #print("distance: " + str(dist))
+    return dist
+
 #inp - string divided by \t or tuple
 """inp = tuple,string"""
 def Parse(inp, approxPoint = None, additionalprojs = [],delimiter = '[\t,]'):
@@ -58,7 +67,7 @@ def Parse(inp, approxPoint = None, additionalprojs = [],delimiter = '[\t,]'):
 
     destproj = osr.SpatialReference()
     destproj.ImportFromProj4("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
-
+    tupleAppPoint=approxPoint
     ap = Geometry(wkbPoint)
     ap.AddPoint(*approxPoint)
 
@@ -67,7 +76,8 @@ def Parse(inp, approxPoint = None, additionalprojs = [],delimiter = '[\t,]'):
 
     dsuspects = []
     for s,u in suspects:
-        d = dist(s,approxPoint,destproj) #dest proj
+        d = distInMeters(s,tupleAppPoint,destproj) #destproj is wgs84 geo
+        #d = dist(s, approxPoint, destproj)
         dsuspects.append((s,u,d))
 
     dsuspects.sort(key=lambda a:a[-1])
