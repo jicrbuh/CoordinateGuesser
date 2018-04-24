@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-/***************************************************************************
  CoordGuesserDialog
                                  A QGIS plugin
+/***************************************************************************
  Parse, unscramble, guess coordinates
                              -------------------
         begin                : 2017-10-19
@@ -39,21 +39,6 @@ from .CoordinateGuesser import Parse, parse_file
 #from qgis.utils import iface
 import re, warnings, csv
 
-def getLayers(destinationComboBox):
-    layersDict = QgsProject.instance().mapLayers()
-    allLayers = list(layersDict.values())
-    destinationComboBox.clear()
-    vectorList = []
-    for layer in allLayers:
-        if layer.type() == QgsMapLayer.VectorLayer:
-            #allLayers.remove(layer)
-            vectorList.append(layer)
-    for layer in vectorList:
-        #comboBox.insertItem(float('inf'), layer.name(), layer)
-        destinationComboBox.insertItem(float('inf'), layer.name(), layer)
-    destinationComboBox.setCurrentIndex(0)
-    self.getFieldList()
-
 def staticSetCoor(destinationLineEdit,x,y):
     destinationLineEdit.setText(f"{x:10.10f}, {y:10.10f}")
 
@@ -79,9 +64,6 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
-        ###############
-        #not a 'connect'
-        ################
         self.canvas = iface.mapCanvas()
         self.iface = iface
         self.getLayers(self.selectLayerComboBox)
@@ -101,7 +83,7 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         ######################
         self.pushButton_Capture.clicked.connect(self.captureButtonClick)
         self.selectLayerComboBox.currentIndexChanged.connect(self.getFieldList)
-        self.selectFieldComboBox.activated.connect(self.onFieldSelected)
+        self.selectFieldComboBox.currentIndexChanged.connect(self.onFieldSelected)
         self.pushButton_Go.pressed.connect(self.guessCoor)  # if Go! button is pushed, guess the coor using parse
         self.pushButton_browse.pressed.connect(lambda: self.getFilePath(0))
         self.checkBox_attr.stateChanged.connect(self.onChangedAttrCheckBox)
@@ -110,10 +92,8 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
     def onChangedAttrCheckBox(self,int):
         self.fromLayerRadioButton.setChecked(True)
         if int == 2:
-
             self.selectFeatureComboBox.setEnabled(False)
         elif int ==0:
-
             self.selectFeatureComboBox.setEnabled(True)
 
     def captureButtonClick(self):
@@ -133,6 +113,7 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
             if layer.type() == QgsMapLayer.VectorLayer:
                 # allLayers.remove(layer)
                 vectorList.append(layer)
+        vectorList= sorted(vectorList, key=lambda layer: layer.name(), reverse=True)
         for layer in vectorList:
             # comboBox.insertItem(float('inf'), layer.name(), layer)
             destinationComboBox.insertItem(float('inf'), layer.name(), layer)
@@ -154,7 +135,9 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         selectedLayer = self.selectLayerComboBox.currentData()
         fieldList = []
         fields = selectedLayer.fields()
+        fields = sorted(fields, key=lambda field: field.name(), reverse=True)
         self.selectFieldComboBox.clear()
+
         for field in fields:
             warnings.warn(str(field.name()))
             self.selectFieldComboBox.insertItem(float('inf'), field.name(), field)
@@ -171,7 +154,9 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         layerCRS = selectedLayer.crs()
         #index = selectedLayer.fieldNameIndex(selectedField)
         features = selectedLayer.getFeatures()
+
         if selectedFieldName:
+            features=sorted(features, key=lambda feature: feature.attribute(selectedFieldName), reverse=True)
             for feature in features:
                 myattr = feature.attribute(selectedFieldName)
                 ctrPoint = feature.geometry().centroid().asPoint()
@@ -179,6 +164,7 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
                 (x, y) = coorTransform(ctrPoint, layerCRS, QgsProject.instance())
                 self.selectFeatureComboBox.insertItem(float('inf'), str(myattr), (x,y))
         self.selectFeatureComboBox.setCurrentIndex(0)
+        self.onFeatureSelected(0)
 
     def getFeatures(self, mylayer):
         """gets all the features (and their center coor) for the selected layer"""
@@ -197,16 +183,18 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         return []
 
     def onFeatureSelected(self, int):
-        centerPoint = self.selectFeatureComboBox.currentData()
-        (x1,y1) = self.selectFeatureComboBox.currentData()
-        selectedLayer = self.selectLayerComboBox.currentData()
-        layerCRS = selectedLayer.crs()
+        if self.selectFeatureComboBox.currentData():
+            centerPoint = self.selectFeatureComboBox.currentData()
+            (x1,y1) = self.selectFeatureComboBox.currentData()
+            selectedLayer = self.selectLayerComboBox.currentData()
+            layerCRS = selectedLayer.crs()
+            staticSetCoor(self.lineEdit_centroid, x1, y1)
         #if centerPoint is None:
          #   (x, y) = coorTransform(selectedLayer.extent().center(), layerCRS, QgsProject.instance())
        # else:
        #     (x,y) = coorTransform(centerPoint, layerCRS, QgsProject.instance())
         #this line changes the coor in the lineEdit_latLong
-        staticSetCoor(self.lineEdit_centroid,x1,y1)
+
 
     def guessCoor(self):
         # coortext is the scrambled coor, xydelim is the user's delimiter
