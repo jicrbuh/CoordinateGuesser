@@ -66,7 +66,7 @@
       <item row="1" column="0">
        <widget class="QLabel" name="label_8">
         <property name="text">
-         <string>Distance from guess [meters]:</string>
+         <string>Distance from guess [km]:</string>
         </property>
        </widget>
       </item>
@@ -310,7 +310,7 @@
       <item row="6" column="0">
        <widget class="QLabel" name="label_10">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A valid PROJ.4 string (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;+proj=longlat +datum=WGS84 +no_defs&lt;/span&gt;) or a UTM zone (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;60&lt;/span&gt;)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A valid UTM zone (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;60&lt;/span&gt;)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
          <string>Additional projection (optional):</string>

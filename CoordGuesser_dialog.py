@@ -113,7 +113,12 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
             if layer.type() == QgsMapLayer.VectorLayer:
                 # allLayers.remove(layer)
                 vectorList.append(layer)
-        vectorList= sorted(vectorList, key=lambda layer: layer.name(), reverse=True)
+
+        try:
+            vectorList = sorted(vectorList, key=lambda layer: layer.name().lower(), reverse=True)
+        except AttributeError:
+            vectorList = sorted(vectorList, key=lambda layer: layer.name(), reverse=True)
+
         for layer in vectorList:
             # comboBox.insertItem(float('inf'), layer.name(), layer)
             destinationComboBox.insertItem(float('inf'), layer.name(), layer)
@@ -135,7 +140,12 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         selectedLayer = self.selectLayerComboBox.currentData()
         fieldList = []
         fields = selectedLayer.fields()
-        fields = sorted(fields, key=lambda field: field.name(), reverse=True)
+
+        try:
+            fields = sorted(fields, key=lambda field: field.name().lower(), reverse=True)
+        except AttributeError:
+            fields = sorted(fields, key=lambda field: field.name(), reverse=True)
+
         self.selectFieldComboBox.clear()
 
         for field in fields:
@@ -156,7 +166,12 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         features = selectedLayer.getFeatures()
 
         if selectedFieldName:
-            features=sorted(features, key=lambda feature: feature.attribute(selectedFieldName), reverse=True)
+            try:
+                features = sorted(features, key=lambda feature: feature.attribute(selectedFieldName),
+                                  reverse=True)
+            except AttributeError:
+                features=sorted(features, key=lambda feature: feature.attribute(selectedFieldName).lower(), reverse=True)
+
             for feature in features:
                 myattr = feature.attribute(selectedFieldName)
                 ctrPoint = feature.geometry().centroid().asPoint()
@@ -168,6 +183,8 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
 
     def getFeatures(self, mylayer):
         """gets all the features (and their center coor) for the selected layer"""
+        self.fromLayerRadioButton.setChecked(True)
+
         def describe(feature):
             fieldCount = len(feature.fields())
             return ", ".join(str(feature[i]) for i in range(fieldCount))
@@ -183,6 +200,8 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         return []
 
     def onFeatureSelected(self, int):
+        self.fromLayerRadioButton.setChecked(True)
+
         if self.selectFeatureComboBox.currentData():
             centerPoint = self.selectFeatureComboBox.currentData()
             (x1,y1) = self.selectFeatureComboBox.currentData()
@@ -288,7 +307,9 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
             #warnings.warn(str(output_guesses[1])) there's no output_guesses[1]!
             output_pt, unmangler, distance = first_guess[0],first_guess[1],first_guess[2]
             self.out_xy.setText(f"{output_pt[0]:10.10f}, {output_pt[1]:10.10f}")
-            self.distance.setText(f"{distance:10.10f}")
+            distanceInKm = distance/1000
+            #self.distance.setText(f"{distance:10.10f}")
+            self.distance.setText(f"{distanceInKm:10.5f}")
             self.method_used.setText(unmangler)
 
         else:
@@ -316,7 +337,8 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
     def getInOutPath(self):
         inputPath = self.lineEdit_filePath.text()
         (dirPath, fileName) = os.path.split(os.path.abspath(inputPath))
-        newFileName = "batched_" + fileName
+
+        newFileName = os.path.splitext(fileName)[0] +"_output" +'.csv'
         outputPath = os.path.join(dirPath, newFileName)
         return (inputPath,outputPath)
 

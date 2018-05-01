@@ -1,5 +1,6 @@
 from .halfCorUnmanglers import *
 from .unmanglerGenerator import *
+#from geographiclib.geodesic import Geodesic
 from ogr import Geometry, wkbPoint
 from .normalize import normalize
 from pyproj import Geod
@@ -37,14 +38,20 @@ def dist(p1, p2, transform):
     #print("distance: " + str(op.Distance(p2)))
     return op.Distance(p2)
 
-def distInMeters(p1, p2, transform):
+def distInMeters(p1, p2, transform,approxPoint):
     x1,y1=p1[0],p1[1]
 
     x2,y2=p2[0],p2[1]
-    g = Geod(ellps='WGS84')  # Use WGS84 ellipsoid
-    az12, az21, dist = g.inv(x1, y1, x2, y2)
-    #print("distance: " + str(dist))
-    return dist
+    g = Geod(ellps='WGS84')  # Use WGS84
+    distance =1
+    try:
+       az12, az21, distance = g.inv(x1, y1, x2, y2) #put in try\except
+    except ValueError:
+     #   #Geo = Geodesic.WGS84
+      #  #dist = Geo.Inverse(x1, y1, x2, y2)
+        distance = 110574*dist(p1, approxPoint, transform)
+        print("approx distance: " + str(distance))
+    return distance
 
 #inp - string divided by \t or tuple
 """inp = tuple,string"""
@@ -76,7 +83,7 @@ def Parse(inp, approxPoint = None, additionalprojs = [],delimiter = '[\t,]'):
 
     dsuspects = []
     for s,u in suspects:
-        d = distInMeters(s,tupleAppPoint,destproj) #destproj is wgs84 geo
+        d = distInMeters(s,tupleAppPoint,destproj,approxPoint) #destproj is wgs84 geo
         #d = dist(s, approxPoint, destproj)
         dsuspects.append((s,u,d))
 

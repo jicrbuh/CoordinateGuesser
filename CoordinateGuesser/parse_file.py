@@ -54,7 +54,7 @@ def parseFileNoCol(input_file,output_file,guessX,guessY,layer=None, field = None
         writer = csv.writer(csv_output, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
 
         writer.writerow(["mangled X", "mangled Y", "guess X", "guess Y", "unmangled X",
-                         "unmangled Y", "distance [deg]", "method","additional_pj","other data from file"])
+                         "unmangled Y", "distance [km]", "method","additional_pj","other data from file"])
         center_pt = ("", "")
         usingGuess = guessY and guessX
         if usingGuess:
@@ -78,11 +78,11 @@ def parseFileNoCol(input_file,output_file,guessX,guessY,layer=None, field = None
                     output_pt, unmangler, distance = parseNoGuess(input_pt)
 
                 if usingField:
-                    writer.writerow([*input_pt, *center_pt, *output_pt, distance, unmangler,additional_pj, *row[3:]])
+                    writer.writerow([*input_pt, *center_pt, *output_pt, distance/1000, unmangler,additional_pj, *row[3:]])
                 else:
-                    writer.writerow([*input_pt, *center_pt, *output_pt, distance, unmangler,additional_pj, *row[2:]])
+                    writer.writerow([*input_pt, *center_pt, *output_pt, distance/1000, unmangler,additional_pj, *row[2:]])
 
-                print("{}: {}, {}, {}".format(i, *output_pt, unmangler, distance))
+                print("{}: {}, {}, {}".format(i, *output_pt, unmangler, distance/1000))
             except:
                 writer.writerow(["error","","","","","","","","",*row])
 
