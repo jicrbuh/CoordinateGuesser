@@ -273,10 +273,13 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
                 (guessX, guessY) = (float(guessX), float(guessY))
             if self.fromLayerRadioButton.isChecked() == True and self.checkBox_attr.isChecked() == False:
                 (guessX, guessY) = self.lineEdit_centroid.text().split(', ')  # guess is the centroid of selected feature
-
-            parse_file.parseFileNoCol(inputPath,outpuPath,guessX,guessY,layer,field,additionProj)
-            self.clearOutpus()
-            self.changeMessage("File created successfully at: " + outpuPath)
+            try:
+                parse_file.parseFileNoCol(inputPath,outpuPath,guessX,guessY,layer,field,additionProj)
+                self.clearOutpus()
+                self.changeMessage("File created successfully at: " + outpuPath)
+            except PermissionError:
+                self.clearOutpus()
+                self.changeMessage("PermissionError: please close input and output files")
 
     def getAdditionalProj(self):
         addProjText = self.lineEdit_addProj.text()

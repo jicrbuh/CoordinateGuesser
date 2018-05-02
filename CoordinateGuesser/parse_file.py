@@ -6,6 +6,7 @@ from .unmanglerGenerator import *
 from .normalize import normalize
 from .parse import Parse, decToDmsCoor
 from ..utilities import *
+from ..enc_detect import *
 import csv, string
 #from string import maketrans
 
@@ -49,7 +50,8 @@ def parseWithLayer(input_pt, layer, field,value,additional_pj=[]):
 
 
 def parseFileNoCol(input_file,output_file,guessX,guessY,layer=None, field = None, additional_pj=[]):
-    with open(input_file, newline='') as csv_input, open(output_file, 'w', newline='') as csv_output:
+    myencoding = get_encoding_by_bom(input_file)
+    with open(input_file, newline='', encoding=myencoding) as csv_input, open(output_file, 'w', newline='') as csv_output:
         reader = csv.reader(csv_input, delimiter=',', quotechar='"')
         writer = csv.writer(csv_output, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
 
