@@ -12,7 +12,11 @@ def genUnmanglers(additionalutmprojs):
     utmHalfcors = [identUTM()]
     #utmgens = [utmBiasedGen(0,0,36),utmBiasedGen(0,0,37)]
     #todo the next lines makes the guesses wrong
-    utmgens = [utmBiasedGen(0,0,i) for i in range(1,61)]
+    offsets = [i*1000000 for i in range(1,10)]
+    zones = range(1,61)
+    utmgens = [utmBiasedGen(0,0,i) for i in zones]
+    utmEastingLMDigit = [utmBiasedGen(i,0,j) for i in offsets for j in zones]
+    utmgens = utmgens+utmEastingLMDigit
     for aup in additionalutmprojs:
         print(str(aup))
        # if isinstance(aup,int) or len(aup) == 1:
@@ -50,7 +54,7 @@ def distInMeters(p1, p2, transform,approxPoint):
      #   #Geo = Geodesic.WGS84
       #  #dist = Geo.Inverse(x1, y1, x2, y2)
         distance = 110574*dist(p1, approxPoint, transform)
-        print("approx distance: " + str(distance))
+        #print("approx distance: " + str(distance))
     return distance
 
 #inp - string divided by \t or tuple
@@ -83,8 +87,8 @@ def Parse(inp, approxPoint = None, additionalprojs = [],delimiter = '[\t,]'):
 
     dsuspects = []
     for s,u in suspects:
-        d = distInMeters(s,tupleAppPoint,destproj,approxPoint) #destproj is wgs84 geo
-        #d = dist(s, approxPoint, destproj)
+        #d = distInMeters(s,tupleAppPoint,destproj,approxPoint) #destproj is wgs84 geo
+        d = dist(s, approxPoint, destproj)
         dsuspects.append((s,u,d))
 
     dsuspects.sort(key=lambda a:a[-1])
