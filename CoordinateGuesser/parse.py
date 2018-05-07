@@ -12,6 +12,7 @@ def genUnmanglers(additionalutmprojs):
     utmHalfcors = [identUTM()]
     #utmgens = [utmBiasedGen(0,0,36),utmBiasedGen(0,0,37)]
     #todo the next lines makes the guesses wrong
+    #trying to commit a change
     offsets = [i*1000000 for i in range(1,10)]
     zones = range(1,61)
     utmgens = [utmBiasedGen(0,0,i) for i in zones]
