@@ -7,18 +7,36 @@ from pyproj import Geod
 import osr, math
 import warnings
 
-def genUnmanglers(additionalutmprojs):
+def genUnmanglers(additionalutmprojs,ix = None, iy = None):
     dest = []
     utmHalfcors = [identUTM()]
     #utmgens = [utmBiasedGen(0,0,36),utmBiasedGen(0,0,37)]
     #todo the next lines makes the guesses wrong
     offsets = [i*1000000 for i in range(1,10)]
+    utmEastingLMDigit = []
+    utmNorthingLMDigit = []
     zones = range(1,61)
+    #zones = range(34, 35)
     utmgens = [utmBiasedGen(0,0,i) for i in zones]
-    utmEastingLMDigit = [utmBiasedGen(i,0,j) for i in offsets for j in zones]
-    utmgens = utmgens+utmEastingLMDigit
+    if all([ix,iy]): # if genUnmanglers
+        try:
+            ix_int_string = str(int(float(ix)))
+            iy_int_string = str(int(float(iy)))
+            leng_ix=len(ix_int_string)
+            leng_iy=len(iy_int_string)
+            power_ten_x = pow(10,leng_ix)
+            power_ten_y = pow(10,leng_iy)
+            xoffsets = [i*power_ten_x  for i in range(1,10)]
+            yoffsets = [i*power_ten_y for i in range(1,10)]
+            utmEastingLMDigit = [utmBiasedGen(i, 0, j) for i in xoffsets for j in zones]
+            utmNorthingLMDigit = [utmBiasedGen(0, i, j) for i in yoffsets for j in zones]
+
+        except ValueError:
+            pass
+
+    utmgens = utmgens + utmEastingLMDigit + utmNorthingLMDigit
     for aup in additionalutmprojs:
-        print(str(aup))
+        #print(str(aup))
        # if isinstance(aup,int) or len(aup) == 1:
          #   aup = (0,0,aup)
        # else isinstance(aup,string):
@@ -65,7 +83,8 @@ def Parse(inp, approxPoint = None, additionalprojs = [],delimiter = '[\t,]'):
     ix, iy = inp
     ix = normalize(ix)
     iy = normalize(iy)
-    unmanglers = genUnmanglers(additionalprojs)
+    unmanglers = genUnmanglers(additionalprojs,ix,iy)
+    #print(*unmanglers, sep='\n')
     suspects = []
     for u in unmanglers:
         can, cx, cy = u.can(ix,iy)
@@ -88,7 +107,7 @@ def Parse(inp, approxPoint = None, additionalprojs = [],delimiter = '[\t,]'):
     dsuspects = []
     for s,u in suspects:
         #d = distInMeters(s,tupleAppPoint,destproj,approxPoint) #destproj is wgs84 geo
-        d = dist(s, approxPoint, destproj)
+        d = dist(s, approxPoint, destproj) #todo check this for mistakes. transformation is suspected
         dsuspects.append((s,u,d))
 
     dsuspects.sort(key=lambda a:a[-1])

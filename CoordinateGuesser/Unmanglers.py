@@ -35,6 +35,7 @@ class UtmUnmangler (Unmangler):
         ux, uy = Unmangler.toCor(self,x,cx,y,cy)
         return self.convertToGeo(ux,uy)
 
+
     def convertToGeo(self,ux,uy):
         destproj = osr.SpatialReference()
         destproj.ImportFromProj4("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
@@ -79,3 +80,23 @@ class InverterUnmangler:
         return self.base.toCor(y,cx,x,cy)
     def __str__(self):
         return "Inverted unmangler of "+str(self.base)
+
+class UtmBiasedInvertedUnmangler(UtmBiasedUnmangler):
+    def __init__(self, xoffset, yoffset, projstring, xUnmangler, yUnmangler=None):
+        UtmBiasedUnmangler.__init__(self, xoffset, yoffset, projstring, xUnmangler, yUnmangler=None)
+
+    def toCor(self,x,cx,y,cy):
+        temp = x
+        x=y
+        y=temp
+        ux, uy = Unmangler.toCor(self, x, cx, y, cy)
+        ux += self.xoffset
+        uy += self.yoffset
+        return self.convertToGeo(ux, uy)
+
+    def __str__(self):
+        if self.x == self.y:
+            halcore = str(self.x)
+        else:
+            halcore = "x: " + str(self.x) + "; y: " + str(self.y)
+        return "projection inverted converter mangler from projection ("+ self.projstring +") with biases ({}; {}); submanglers: ".format(self.xoffset,self.yoffset) + halcore

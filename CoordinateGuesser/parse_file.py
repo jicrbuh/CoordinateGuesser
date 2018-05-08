@@ -19,7 +19,7 @@ def getFeature(layerPath, myField, myValue):
     x,y = (None,None)
 
     for feature in layer:
-        print(myValue + " " + feature.GetField(myField))
+        #print(myValue + " " + feature.GetField(myField))
         #if (feature.GetField(myField) == myValue or feature.GetField(myField) == float(myValue)):
         if (feature.GetField(myField) == myValue):
             geom = feature.GetGeometryRef()

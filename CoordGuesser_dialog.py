@@ -311,8 +311,9 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
             output_pt, unmangler, distance = first_guess[0],first_guess[1],first_guess[2]
             self.out_xy.setText(f"{output_pt[0]:10.10f}, {output_pt[1]:10.10f}")
             distanceInKm = distance/1000
-            #self.distance.setText(f"{distance:10.10f}")
-            self.distance.setText(f"{distanceInKm:10.5f}")
+
+            self.distance.setText(f"{distance:10.5f}" + " deg")
+            #self.distance.setText(f"{distanceInKm:10.5f}" + " km")
             self.method_used.setText(unmangler)
 
         else:

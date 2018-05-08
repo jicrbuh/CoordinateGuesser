@@ -10,6 +10,7 @@ class utmBiasedGen:
             self.proj = "+proj=utm +zone={} +ellps=WGS84 +datum=WGS84 +units=m +no_defs".format(proj)
     def __call__(self, *halfcors):
         for halfcor in halfcors:
+            #todo needs to add somehow the invertedbiasedunamnalger
             ret = UtmBiasedUnmangler(self.xoff,self.yoff,self.proj,halfcor, halfcor)
             yield ret
             yield InverterUnmangler(ret)
