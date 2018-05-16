@@ -7,7 +7,13 @@ from pyproj import Geod
 import osr, math
 import warnings
 
-def genUnmanglers(additionalutmprojs,ix = None, iy = None):
+
+def genUnmanglers(additionalutmprojs):
+    """
+    generate a collection of unmanglers
+    :param additionalutmprojs: by default, only the 36 and 37 UTM zones are considered, other zones can be entered here or a tuple with offests. (100,20,36) will add an unmamgler to zone 36 which adds 100 to x and 20 to y.
+    :return: a list of unmanglers generated from the input
+    """
     dest = []
     utmHalfcors = [identUTM()]
     #utmgens = [utmBiasedGen(0,0,36),utmBiasedGen(0,0,37)]
@@ -48,6 +54,7 @@ def genUnmanglers(additionalutmprojs,ix = None, iy = None):
     for gen in utmgens:
         for u in gen(*utmHalfcors):
             dest.append(u)
+    #todo make a repository for all these types
     geohalfcors = [concattedDMS(),identDMS(),identDecDegGeo(), identDecMinGeo(), identDecSecGeo()]
     for gen in [geoGen()]:
         for u in gen(*geohalfcors):
@@ -55,11 +62,20 @@ def genUnmanglers(additionalutmprojs,ix = None, iy = None):
     return dest
 
 def dist(p1, p2, transform):
+    """
+    get distance between two points according to a transformation
+    NOTE: since we only use the distance to cmopare to other distances, the actual units is incosequential
+    :param p1: the first point
+    :param p2: the second point
+    :param transform: the destionation projection to use
+    :return: the distance between the two points, in the selected transformation
+    """
     op = Geometry(wkbPoint)
     op.AddPoint(*p1)
     op.TransformTo(transform)
-    #print("distance: " + str(op.Distance(p2)))
+
     return op.Distance(p2)
+
 
 def distInMeters(p1, p2, transform,approxPoint):
     x1,y1=p1[0],p1[1]
@@ -78,12 +94,20 @@ def distInMeters(p1, p2, transform,approxPoint):
 
 #inp - string divided by \t or tuple
 """inp = tuple,string"""
+#todo make this more visible
 def Parse(inp, approxPoint = None, additionalprojs = [],delimiter = '[\t,]'):
+    """
+    attempts to parse the input string into likely points
+    :param inp: the mangled coordinate string
+    :param approxPoint: if provided, the candidates will be sorted according to distance to this point
+    :param additionalprojs: additional projections to consider, check genUnmanglers's doc for additional info.
+    :return: a list of potiental unmangled coordinates, along with the unmnaglers that unmangled it. If approxPoint is provided, each point will also have the distance to it.
+    """
     if isinstance(inp, str):
         inp = re.split(delimiter,inp,1)
     ix, iy = inp
-    ix = normalize(ix)
-    iy = normalize(iy)
+    ix = fixdmschars(ix)
+    iy = fixdmschars(iy)
     unmanglers = genUnmanglers(additionalprojs,ix,iy)
     #print(*unmanglers, sep='\n')
     suspects = []

@@ -1,9 +1,14 @@
 import re
 
 def fixdmschars(dms_str):
-    dx = [0x0064, 0x00B0, 0x0044]
-    mx = [0x006D, 0x00b4, 0x0027,0x2032,0x2035,0x02B9,0x2019,0x02BC,0x02BC,0x055A,0xA78B,0xA78C,0xFF07,0x004d]
-    sx = [0x0022, 0x2033,0x2036,0x02BA,0x02EE, 0x201d]
+    """
+    replaces all wierd characters in geo strings with appropriate ones
+    :param dms_str: the string with wierd charaters
+    :return: the same string with all wierd charaters replaced with teh "standard" charaters
+    """
+    dx = [0x0064, 0x00B0, 0x0044] #d, °, D
+    mx = [0x006D, 0x00b4, 0x0027,0x2032,0x2035,0x02B9,0x2019,0x02BC,0x02BC,0x055A,0xA78B,0xA78C,0xFF07,0x004d] #m, ´, ', ′, ‵, ʹ, ’, ʼ, ʼ, ՚, Ꞌ, ꞌ, ＇, M
+    sx = [0x0022, 0x2033,0x2036,0x02BA,0x02EE, 0x201d] # ", ″, ‶, ʺ, ˮ, ”
     ds = [chr(x) for x in dx]
     ms = [chr(x) for x in mx]
     ss = [chr(x) for x in sx]
@@ -21,12 +26,12 @@ def fixdmschars(dms_str):
             str = str.replace(x, x0,1)
     return str
 
-def normalize(x):
-    x = fixdmschars(x)
-    #x = re.sub(r'[\s,/\\]+', ' ', x,3)
-    return x
-
 def extractSignfromGeo(x):
+    """
+    tries to extract a direction sign from a geo coordinate string
+    :param x: the string to parse
+    :return: a tuple containing (the string without the direction token, the sign of the direction, the direction index 0-x; 1-y; 2-no direction found)
+    """
     if re.search("[sS]", x):
         sign = -1
         pos = 1

@@ -1,11 +1,22 @@
 from .normalize import extractSignfromGeo
 import re
 
+"""
+the first can return value 
+-1 to signify that the value cannot be handled by unmanglers
+0 and 1 to signify that the value can only be handled as an x or y coordinate, respectivly
+2 to signify that it can be both 
+"""
+
 def tofloatindif(x):
+    """converts european-style floating point numbers and sane-style floating point numbers to floats"""
     x = x.replace(',', '.')
     return float(x.replace('.', '', x.count('.') - 1))
 
+#todo abc
+
 class concattedDMS:
+    """903030->91.00833"""
     @staticmethod
     def split(x):
         blacklist = [chr(u) for u in [0x00B0, 0x2032, 0x2033 ]]
@@ -22,7 +33,6 @@ class concattedDMS:
         mm = int(x[lend:lend+2])
         ss = int(x[lend+2:])
         return sign*dd,sign*mm,sign*ss
-
     def can(self, x):
         x, sign, pos = extractSignfromGeo(x)
         try:
@@ -38,7 +48,6 @@ class concattedDMS:
         if d > 90 or d < -90:
             pos = 0
         return pos, (d,m,s,sign)
-
     def toHalfCor(self, x, canval):
         d,m,s,sign = canval
         return (d+(m+s/60.0)/60.0) * sign
@@ -46,6 +55,7 @@ class concattedDMS:
         return "ddmmss"
 
 class identDMS:
+    """90 30 30->91.00833"""
     @staticmethod
     def split(x):
         blacklist = [chr(u) for u in [0x0064, 0x006d, 0x0022]]
@@ -75,6 +85,7 @@ class identDMS:
         return "d m s"
 
 class identDecDegGeo:
+    """91.00833 -> 91.00833"""
     def can(self, x):
         x, sign, pos = extractSignfromGeo(x)
         try:
@@ -93,6 +104,10 @@ class identDecDegGeo:
         return "geodecdeg"
 
 class identDecMinGeo:
+    """
+    5460.4998 -> 91.00833
+    raw minutes
+    """
     def can(self, x):
         x, sign, pos = extractSignfromGeo(x)
         try:
@@ -112,6 +127,10 @@ class identDecMinGeo:
         return "geodecmin"
 
 class identDecSecGeo:
+    """
+    327629.98799999995 -> 91.00833
+    raw seconds
+    """
     def can(self, x):
         x, sign, pos = extractSignfromGeo(x)
         try:
@@ -131,6 +150,7 @@ class identDecSecGeo:
         return "geodecsec"
 
 class identUTM:
+    """raw utm"""
     def can(self,x):
         try:
             d = tofloatindif(x)
