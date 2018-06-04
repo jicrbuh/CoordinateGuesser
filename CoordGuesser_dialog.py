@@ -123,7 +123,9 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
             # comboBox.insertItem(float('inf'), layer.name(), layer)
             destinationComboBox.insertItem(float('inf'), layer.name(), layer)
         destinationComboBox.setCurrentIndex(0)
-        self.getFieldList(0)
+        if len(vectorList) > 0:
+            print(str(len(vectorList)))
+            self.getFieldList(0)
 
     def onLayerSelected(self, ind):
         """gets all the features of a selected layer into the combobox"""
@@ -139,7 +141,9 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         # todo https://gis.stackexchange.com/questions/212618/check-particular-feature-exists-using-pyqgis
         selectedLayer = self.selectLayerComboBox.currentData()
         fieldList = []
+
         fields = selectedLayer.fields()
+
 
         try:
             fields = sorted(fields, key=lambda field: field.name().lower(), reverse=True)
@@ -221,7 +225,7 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         additionProj = self.getAdditionalProj()
         layer = None
         field = None
-        #print("additionProj: " + str(additionProj))
+
 
         #single mode
         if self.radioButton_single.isChecked():
@@ -301,13 +305,9 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         return []
 
     def showOutputs(self, *output_guesses, isguess=True):
-        #warnings.warn("output_guesses type: " + str(type(output_guesses))) # 'tuple'
-        #warnings.warn("output_guesses[0] type: " + str(type(output_guesses[0])))  # 'list
-        #warnings.warn("output_guesses[0][0] type: " + str(type(output_guesses[0][0]))) #'tuple'
         first_guess = output_guesses[0][0]
         # isguess - did user choose a guess (if chose "no given guess"-> isguess=False)
         if isguess == True:
-            #warnings.warn(str(output_guesses[1])) there's no output_guesses[1]!
             output_pt, unmangler, distance = first_guess[0],first_guess[1],first_guess[2]
             self.out_xy.setText(f"{output_pt[0]:10.10f}, {output_pt[1]:10.10f}")
             distanceInKm = distance/1000
