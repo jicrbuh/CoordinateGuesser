@@ -2,7 +2,7 @@ from .halfCorUnmanglers import *
 from .unmanglerGenerator import *
 #from geographiclib.geodesic import Geodesic
 from ogr import Geometry, wkbPoint
-from .normalize import normalize
+from .normalize import fixdmschars
 from pyproj import Geod
 import osr, math
 import warnings
@@ -17,13 +17,10 @@ def genUnmanglers(additionalutmprojs):
     dest = []
     utmHalfcors = [identUTM()]
     #utmgens = [utmBiasedGen(0,0,36),utmBiasedGen(0,0,37)]
-    #todo the next lines makes the guesses wrong
-    #trying to commit a change
     offsets = [i*1000000 for i in range(1,10)]
     utmEastingLMDigit = []
     utmNorthingLMDigit = []
     zones = range(1,61)
-    #zones = range(34, 35)
     utmgens = [utmBiasedGen(0,0,i) for i in zones]
     if all([ix,iy]): # if genUnmanglers
         try:
