@@ -3,7 +3,7 @@ import osr, warnings
 
 from .halfCorUnmanglers import *
 from .unmanglerGenerator import *
-from .normalize import normalize
+from .normalize import fixdmschars
 from .parse import Parse, decToDmsCoor
 from ..utilities import *
 from ..enc_detect import *
