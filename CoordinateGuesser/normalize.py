@@ -6,25 +6,24 @@ def fixdmschars(dms_str):
     :param dms_str: the string with wierd charaters
     :return: the same string with all wierd charaters replaced with teh "standard" charaters
     """
-    dx = [0x0064, 0x00B0, 0x0044] #d, °, D
-    mx = [0x006D, 0x00b4, 0x0027,0x2032,0x2035,0x02B9,0x2019,0x02BC,0x02BC,0x055A,0xA78B,0xA78C,0xFF07,0x004d] #m, ´, ', ′, ‵, ʹ, ’, ʼ, ʼ, ՚, Ꞌ, ꞌ, ＇, M
-    sx = [0x0022, 0x2033, 0x2036, 0x02BA, 0x02EE, 0x201d, 0x201c, 0x201F, 0xFF02] # ", ″, ‶, ʺ, ˮ, ”
-    ds = [chr(x) for x in dx]
-    ms = [chr(x) for x in mx]
-    ss = [chr(x) for x in sx]
+
+    dx = ['d', '°', 'D'] #d, °, D
+    mx = ['m', '´', "'", '′', '‵', 'ʹ', '’', 'ʼ', 'ʼ', '՚', 'Ꞌ', 'ꞌ', '＇', 'M'] #m, ´, ', ′, ‵, ʹ, ’, ʼ, ʼ, ՚, Ꞌ, ꞌ, ＇, M
+    sx = ['"', "''", '"', '＂', '〃', 'ˮ',  '᳓', '″',  '‶', '˶', 'ʺ', '“', '”', '˝', '‟'] # ",'', ", ＂, 〃, ˮ, ᳓, ″, ‶, ˶, ʺ, “, ”, ˝, ‟
+
     w = ['W', 'O', 'w', 'o']
     e = ['E', 'L', 'e', 'l']
     s = ['S', 's']
     n = ['N', 'n']
-    l = [ds, ms, ss, w, e, s ,n]
+    l = [dx, mx, sx, w, e, s, n]
     #print dms_str
-    str = dms_str
+    mystr = dms_str
     for r in l:
         o = ord(r[0])
         x0 = chr(o)
         for x in r[1:]:
-            str = str.replace(x, x0,1)
-    return str
+            mystr = mystr.replace(x, x0,1)
+    return mystr
 
 def extractSignfromGeo(x):
     """
