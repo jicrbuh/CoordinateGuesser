@@ -8,7 +8,7 @@ import osr, math
 import warnings
 
 
-def genUnmanglers(additionalutmprojs):
+def genUnmanglers(additionalprojs,ix,iy):
     """
     generate a collection of unmanglers
     :param additionalutmprojs: by default, only the 36 and 37 UTM zones are considered, other zones can be entered here or a tuple with offests. (100,20,36) will add an unmamgler to zone 36 which adds 100 to x and 20 to y.
@@ -16,7 +16,7 @@ def genUnmanglers(additionalutmprojs):
     """
     dest = []
     utmHalfcors = [identUTM()]
-    #utmgens = [utmBiasedGen(0,0,36),utmBiasedGen(0,0,37)]
+
     offsets = [i*1000000 for i in range(1,10)]
     utmEastingLMDigit = []
     utmNorthingLMDigit = []
@@ -39,8 +39,8 @@ def genUnmanglers(additionalutmprojs):
             pass
 
     utmgens = utmgens + utmEastingLMDigit + utmNorthingLMDigit
-    for aup in additionalutmprojs:
-        #print(str(aup))
+    for aup in additionalprojs:
+
        # if isinstance(aup,int) or len(aup) == 1:
          #   aup = (0,0,aup)
        # else isinstance(aup,string):
