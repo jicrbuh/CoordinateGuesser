@@ -129,7 +129,7 @@ def Parse(inp, approxPoint = None, additionalprojs = [],delimiter = '[\t,]'):
     dsuspects = []
     for s,u in suspects:
         #d = distInMeters(s,tupleAppPoint,destproj,approxPoint) #destproj is wgs84 geo
-        d = dist(s, approxPoint, destproj) #todo check this for mistakes. transformation is suspected
+        d = dist(s, approxPoint, destproj)
         dsuspects.append((s,u,d))
 
     dsuspects.sort(key=lambda a:a[-1])
