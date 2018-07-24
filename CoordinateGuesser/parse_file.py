@@ -56,7 +56,7 @@ def parseFileNoCol(input_file,output_file,guessX,guessY,layer=None, field = None
         writer = csv.writer(csv_output, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
 
         writer.writerow(["mangled X", "mangled Y", "guess X", "guess Y", "unmangled X",
-                         "unmangled Y", "distance [deg]", "method","additional_pj","other data from file"])
+                         "unmangled Y", "distance [km]", "method","additional_pj","other data from file"])
         center_pt = ("", "")
         usingGuess = guessY and guessX
         if usingGuess:

@@ -67,7 +67,6 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         self.canvas = iface.mapCanvas()
         self.iface = iface
         self.getLayers(self.selectLayerComboBox)
-        #todo use staticSetCoor for self.coorTool
         self.VMarker = QgsVertexMarker(self.canvas)
         self.VMarker.hide()
         self.coorTool = getCoordinateTool(self,self.canvas,self.setCoor, QgsProject.instance(),self.VMarker)
@@ -77,6 +76,13 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         self.unmangledMarker.hide()
         self.unmangledMarker.setPenWidth(3)
         self.VMarker.setPenWidth(3)
+        if self.noGivenRadioButton.isChecked():
+            self.toggleNoGuess()
+        elif self.fromMapRadioButton.isChecked():
+            self.toggleFromLongLat()
+        else:
+            self.toggleFromLayer()
+
 
         ######################
         ######connects#######
@@ -88,6 +94,49 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         self.pushButton_browse.pressed.connect(lambda: self.getFilePath(0))
         self.checkBox_attr.stateChanged.connect(self.onChangedAttrCheckBox)
         self.selectFeatureComboBox.activated.connect(self.onFeatureSelected)
+        self.radioButton_single.pressed.connect(self.onSingleModeSelected)
+        self.radioButton_batch.pressed.connect(self.onBatchModeSelected)
+        self.noGivenRadioButton.pressed.connect(self.toggleNoGuess)
+        self.fromMapRadioButton.pressed.connect(self.toggleFromLongLat)
+        self.fromLayerRadioButton.pressed.connect(self.toggleFromLayer)
+
+
+    def toggleNoGuess(self):
+        self.lineEdit_latLong.setEnabled(False)
+        self.pushButton_Capture.setEnabled(False)
+        self.lineEdit_centroid.setEnabled(False)
+        self.selectLayerComboBox.setEnabled(False)
+        self.selectFieldComboBox.setEnabled(False)
+        self.selectFeatureComboBox.setEnabled(False)
+
+    def toggleFromLongLat(self):
+        self.toggleNoGuess()
+        self.lineEdit_latLong.setEnabled(True)
+        self.pushButton_Capture.setEnabled(True)
+
+    def toggleFromLayer(self):
+        self.toggleNoGuess()
+        self.lineEdit_centroid.setEnabled(True)
+        self.selectLayerComboBox.setEnabled(True)
+        self.selectFieldComboBox.setEnabled(True)
+        self.selectFeatureComboBox.setEnabled(True)
+
+    def onSingleModeSelected(self):
+        self.selectFeatureComboBox.setEnabled(True)
+        self.lineEdit_filePath.setEnabled(False)
+        self.checkBox_attr.setEnabled(False)
+        self.pushButton_browse.setEnabled(False)
+        self.scrambled.setEnabled(True)
+        self.xydelim.setEnabled(True)
+
+    def onBatchModeSelected(self):
+        if self.checkBox_attr.isChecked():
+            self.selectFeatureComboBox.setEnabled(False)
+        self.lineEdit_filePath.setEnabled(True)
+        self.checkBox_attr.setEnabled(True)
+        self.pushButton_browse.setEnabled(True)
+        self.scrambled.setEnabled(False)
+        self.xydelim.setEnabled(False)
 
     def onChangedAttrCheckBox(self,int):
         self.fromLayerRadioButton.setChecked(True)
@@ -143,7 +192,6 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         fieldList = []
 
         fields = selectedLayer.fields()
-
 
         try:
             fields = sorted(fields, key=lambda field: field.name().lower(), reverse=True)
@@ -233,26 +281,31 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
             # if the delimiter isn't found in the user's scrambled text an error message
             try:
                 (x, y) = re.split(self.xydelim.text(), coorText, 1)
-                (x,y) = (x.strip(),y.strip())
+                (x, y) = (x.strip(), y.strip())
             except ValueError:
-                self.changeMessage("ERROR: XY delimiter not found in scrambled coor")
-                return
+                try:
+                    (x, y) = re.split('\s+', coorText, 1)
+                    (x, y) = (x.strip(), y.strip())
+
+                except ValueError:
+                    self.changeMessage("ERROR: XY delimiter not found in scrambled coordinate")
+                    return
 
             try:
-                if self.noGivenRadioButton.isChecked() == True:
+                if self.noGivenRadioButton.isChecked():
                     output_guesses = Parse((x, y),None,additionProj) #uncomment if you don't want parse to split the str coortext
                     #output_guesses = Parse(coorText, delimiter=self.xydelim.text())
                     self.showOutputs(output_guesses,isguess=False)
 
-                if self.fromMapRadioButton.isChecked() == True:
-                    (guessX,guessY) = self.lineEdit_latLong.text().split(', ') #guess is the point the user clicked
-                    (guessX, guessY) = (float(guessX),float(guessY))
+                if self.fromMapRadioButton.isChecked():
+                    (guessX, guessY) = self.lineEdit_latLong.text().split(',') #guess is the point the user clicked
+                    (guessX, guessY) = (float(guessX.strip()), float(guessY.strip()))
                     output_guesses = Parse((x, y), (guessX,guessY),additionProj)
                     self.showOutputs(output_guesses)
 
-                if self.fromLayerRadioButton.isChecked() == True:
-                    (guessX,guessY) = self.lineEdit_centroid.text().split(', ') #guess is the centroid of selected feature
-                    output_guesses = Parse((x, y), (float(guessX),float(guessY)), additionProj)
+                if self.fromLayerRadioButton.isChecked():
+                    (guessX, guessY) = self.lineEdit_centroid.text().split(',') #guess is the centroid of selected feature
+                    output_guesses = Parse((x, y), (float(guessX.strip()), float(guessY.strip())), additionProj)
                     self.showOutputs(output_guesses)
             except:
                 self.changeMessage("ERROR: Could not parse coordinate")
@@ -260,7 +313,7 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         #batch mode
         else:
             if self.checkBox_attr.isChecked():
-                print("attr is checked")
+                #print("attr is checked")
 
                 layer = self.selectLayerComboBox.currentData()
                 path = layer.dataProvider().dataSourceUri()
@@ -268,14 +321,14 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
                 layer = path
 
                 field = self.selectFieldComboBox.currentText()
-                print(path + " "+field)
+                #print(path + " "+field)
 
             inputPath,outpuPath = self.getInOutPath()
             guessX, guessY = (None,None)
-            if self.fromMapRadioButton.isChecked() == True:
+            if self.fromMapRadioButton.isChecked():
                 (guessX, guessY) = self.lineEdit_latLong.text().split(', ')  # guess is the point the user clicked
                 (guessX, guessY) = (float(guessX), float(guessY))
-            if self.fromLayerRadioButton.isChecked() == True and self.checkBox_attr.isChecked() == False:
+            if self.fromLayerRadioButton.isChecked() and self.checkBox_attr.isChecked() == False:
                 (guessX, guessY) = self.lineEdit_centroid.text().split(', ')  # guess is the centroid of selected feature
             try:
                 parse_file.parseFileNoCol(inputPath,outpuPath,guessX,guessY,layer,field,additionProj)
@@ -312,8 +365,9 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
             self.out_xy.setText(f"{output_pt[0]:10.10f}, {output_pt[1]:10.10f}")
             distanceInKm = distance/1000
 
-            self.distance.setText(f"{distance:10.5f}" + " deg")
-            #self.distance.setText(f"{distanceInKm:10.5f}" + " km")
+            #self.distance.setText('{:.4f} deg'.format(distance))
+
+            self.distance.setText('{:,.3f} km'.format(distanceInKm))
             self.method_used.setText(unmangler)
 
         else:
@@ -358,7 +412,6 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
 
         else:
             filename1 = QFileDialog.getOpenFileName(self, str("Open File"), "", str("SHP Files (*.shp)"))
-            ##filename1 is a tuple, filename[0] is the path, filename[1] is the file type
             if filename1[0] != None:
                 self.lineEdit_filePath.setText(filename1[0])
 

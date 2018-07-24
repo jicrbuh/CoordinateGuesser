@@ -21,17 +21,17 @@ def genUnmanglers(additionalprojs,ix,iy):
     utmEastingLMDigit = []
     utmNorthingLMDigit = []
     zones = range(1,61)
-    utmgens = [utmBiasedGen(0,0,i) for i in zones]
-    if all([ix,iy]): # if genUnmanglers
+    utmgens = [utmBiasedGen(0, 0, i) for i in zones]
+    if all([ix, iy]):  # if genUnmanglers
         try:
             ix_int_string = str(int(float(ix)))
             iy_int_string = str(int(float(iy)))
             leng_ix=len(ix_int_string)
             leng_iy=len(iy_int_string)
-            power_ten_x = pow(10,leng_ix)
-            power_ten_y = pow(10,leng_iy)
-            xoffsets = [i*power_ten_x  for i in range(1,10)]
-            yoffsets = [i*power_ten_y for i in range(1,10)]
+            power_ten_x = pow(10, leng_ix)
+            power_ten_y = pow(10, leng_iy)
+            xoffsets = [i*power_ten_x  for i in range(1, 10)]
+            yoffsets = [i*power_ten_y for i in range(1, 10)]
             utmEastingLMDigit = [utmBiasedGen(i, 0, j) for i in xoffsets for j in zones]
             utmNorthingLMDigit = [utmBiasedGen(0, i, j) for i in yoffsets for j in zones]
 
@@ -52,7 +52,7 @@ def genUnmanglers(additionalprojs,ix,iy):
         for u in gen(*utmHalfcors):
             dest.append(u)
     #todo make a repository for all these types
-    geohalfcors = [concattedDMS(),identDMS(),identDecDegGeo(), identDecMinGeo(), identDecSecGeo()]
+    geohalfcors = [concattedDMS(), identDMS(), identDecDegGeo(), identDecMinGeo(), identDecSecGeo()]
     for gen in [geoGen()]:
         for u in gen(*geohalfcors):
             dest.append(u)
@@ -75,18 +75,17 @@ def dist(p1, p2, transform):
 
 
 def distInMeters(p1, p2, transform,approxPoint):
-    x1,y1=p1[0],p1[1]
-
-    x2,y2=p2[0],p2[1]
+    x1, y1 = p1[0], p1[1]
+    x2, y2 = p2[0], p2[1]
     g = Geod(ellps='WGS84')  # Use WGS84
-    distance =1
+    distance = 1
     try:
-       az12, az21, distance = g.inv(x1, y1, x2, y2) #put in try\except
+       az12, az21, distance = g.inv(x1, y1, x2, y2)
     except ValueError:
      #   #Geo = Geodesic.WGS84
       #  #dist = Geo.Inverse(x1, y1, x2, y2)
         distance = 110574*dist(p1, approxPoint, transform)
-        #print("approx distance: " + str(distance))
+        print("approx distance: " + str(distance))
     return distance
 
 #inp - string divided by \t or tuple
@@ -105,11 +104,11 @@ def Parse(inp, approxPoint = None, additionalprojs = [],delimiter = '[\t,]'):
     ix, iy = inp
     ix = fixdmschars(ix)
     iy = fixdmschars(iy)
-    unmanglers = genUnmanglers(additionalprojs,ix,iy)
+    unmanglers = genUnmanglers(additionalprojs, ix, iy)
     #print(*unmanglers, sep='\n')
     suspects = []
     for u in unmanglers:
-        can, cx, cy = u.can(ix,iy)
+        can, cx, cy = u.can(ix, iy)
         if not can:
             continue
         suspects.append((u.toCor(ix,cx,iy,cy), str(u)))
@@ -128,8 +127,8 @@ def Parse(inp, approxPoint = None, additionalprojs = [],delimiter = '[\t,]'):
 
     dsuspects = []
     for s,u in suspects:
-        #d = distInMeters(s,tupleAppPoint,destproj,approxPoint) #destproj is wgs84 geo
-        d = dist(s, approxPoint, destproj)
+        d = distInMeters(s,tupleAppPoint,destproj,approxPoint) #destproj is wgs84 geo
+        #d = dist(s, approxPoint, destproj)
         dsuspects.append((s,u,d))
 
     dsuspects.sort(key=lambda a:a[-1])

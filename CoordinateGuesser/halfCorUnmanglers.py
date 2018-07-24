@@ -151,13 +151,17 @@ class identDecSecGeo:
 
 class identUTM:
     """raw utm"""
-    def can(self,x):
+    def can(self, x):
+
+        (abx, sign, pos) = extractSignfromGeo(x)  ##TODO needs to handle WNSE!
         try:
-            d = tofloatindif(x)
+            d = sign*tofloatindif(abx)
         except ValueError:
             return -1, None
-        return 2, d
+        return pos, d
+
     def toHalfCor(self, x, canval):
         return canval
+
     def __str__(self):
         return "utmcoor"

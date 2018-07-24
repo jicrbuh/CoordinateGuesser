@@ -22,7 +22,7 @@ def fixdmschars(dms_str):
         o = ord(r[0])
         x0 = chr(o)
         for x in r[1:]:
-            mystr = mystr.replace(x, x0,1)
+            mystr = mystr.replace(x, x0, 1)
     return mystr
 
 def extractSignfromGeo(x):
@@ -49,4 +49,4 @@ def extractSignfromGeo(x):
     if x.startswith('-'):
         sign*=-1
         x = x[1:]
-    return re.sub('[swenSWENolOL]', '', x, 1),sign,pos
+    return re.sub('[swenSWENolOL]', '', x, 1), sign, pos
