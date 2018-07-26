@@ -58,8 +58,6 @@ def addFields(layer):
     layer.CreateField(field_mangledy)
     layer.CreateField(ogr.FieldDefn("Guess X", ogr.OFTReal))
     layer.CreateField(ogr.FieldDefn("Guess Y", ogr.OFTReal))
-    layer.CreateField(ogr.FieldDefn("Unmangled X", ogr.OFTReal))
-    layer.CreateField(ogr.FieldDefn("Unmangled Y", ogr.OFTReal))
     layer.CreateField(ogr.FieldDefn("distance", ogr.OFTReal))
     field_method = ogr.FieldDefn("Method", ogr.OFTString)
     field_method.SetWidth(24)
@@ -71,8 +69,33 @@ def addFields(layer):
     field_data.SetWidth(48)
     layer.CreateField(field_data)
 
-def addFeature(mangx, mangy, guessx, guessy, unmangx, unmangy, distance,method, pj, data)
-    pass
+
+def addFeature(layer, mangx, mangy, guessx, guessy, x,y, distance,method, pj, data=None):
+
+    feature = ogr.Feature(layer.GetLayerDefn())
+    # Set the attributes using the values from the delimited text file
+    feature.SetField("Mangled X", mangx)
+    feature.SetField("Mangled Y", mangy)
+    feature.SetField("Guess X", guessx)
+    feature.SetField("Guess Y", guessy)
+    feature.SetField("distance", distance)
+    feature.SetField("Method", method)
+    feature.SetField("additional projection", pj)
+    feature.SetField("Other Data", data)
+
+    # create the WKT for the feature using Python string formatting
+    wkt = "POINT({:f} {:f})".format(x, y)
+    print("wkt: {}".format(wkt))
+
+    # Create the point from the Well Known Txt
+    point = ogr.CreateGeometryFromWkt(wkt)
+
+    # Set the feature geometry using the point
+    feature.SetGeometry(point)
+    # Create the feature in the layer (shapefile)
+    layer.CreateFeature(feature)
+    # Destroy the feature to free resources
+    feature.Destroy()
 
 #todo add https://pcjericks.github.io/py-gdalogr-cookbook/layers.html#create-a-new-shapefile-and-add-data
 #todo documentation http://gdal.org/java/index.html?org/gdal/ogr/FieldDefn.html
@@ -83,14 +106,15 @@ def parseFileNoCol(input_file, output_file, guessX, guessY, layer=None, field=No
         writer = csv.writer(csv_output, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
         # set up the shapefile driver
         driver = ogr.GetDriverByName("ESRI Shapefile")
-        # create the data source
-        data_source = driver.CreateDataSource(os.path.splitext('/path/to/somefile.ext')[0]+".shp")
-        # create the spatial reference, WGS84
+        shapepath = os.path.splitext(output_file)[0]+".shp"
+        if os.path.exists(shapepath):
+            os.remove(shapepath)
+        data_source = driver.CreateDataSource(shapepath)
+
         srs = osr.SpatialReference()
         srs.ImportFromEPSG(4326)
-        # create the layer
-        layer = data_source.CreateLayer("UnmangledCoords", srs, ogr.wkbPoint)
-        addFields(layer)
+        shplayer = data_source.CreateLayer("UnmangledCoords", srs, ogr.wkbPoint)
+        addFields(shplayer)
 
         writer.writerow(["mangled X", "mangled Y", "guess X", "guess Y", "unmangled X",
                          "unmangled Y", "distance [km]", "method","additional_pj","other data from file"])
@@ -98,30 +122,34 @@ def parseFileNoCol(input_file, output_file, guessX, guessY, layer=None, field=No
         usingGuess = guessY and guessX
         if usingGuess:
             center_pt = (guessX,guessY)
-        #if there's layer and field then we use the third column
+        # if there's layer and field then we use the third column
         usingField = layer and field
 
-        for i,row in enumerate(reader): #i is the index of the row
+        for i,row in enumerate(reader): # i is the index of the row
 
-            try:
+            #try:
 
-                input_pt = (row[0], row[1])
+            input_pt = (row[0], row[1])
 
-                if usingGuess:
-                    output_pt, unmangler, distance= parseWithGuess(input_pt,(guessX,guessY),additional_pj)
-                elif usingField:
-                    attr = row[2]
-                    center_pt = getFeature(layer,field,attr)
-                    output_pt, unmangler, distance = parseWithGuess(input_pt, center_pt, additional_pj)
-                else:
-                    output_pt, unmangler, distance = parseNoGuess(input_pt)
+            if usingGuess:
+                output_pt, unmangler, distance= parseWithGuess(input_pt,(guessX,guessY),additional_pj)
+            elif usingField:
+                attr = row[2]
+                center_pt = getFeature(layer,field,attr)
+                output_pt, unmangler, distance = parseWithGuess(input_pt, center_pt, additional_pj)
+            else:
+                output_pt, unmangler, distance = parseNoGuess(input_pt)
 
-                if usingField:
-                    writer.writerow([*input_pt, *center_pt, *output_pt, distance/1000, unmangler,additional_pj, *row[3:]])
-                else:
-                    writer.writerow([*input_pt, *center_pt, *output_pt, distance/1000, unmangler,additional_pj, *row[2:]])
+            if usingField:
+                writer.writerow([*input_pt, *center_pt, *output_pt, distance/1000, unmangler,additional_pj, *row[3:]])
+                addFeature(shplayer, *input_pt,*center_pt, *output_pt, distance/1000, unmangler, " "," ".join(row[3:]))
+            else:
+                writer.writerow([*input_pt, *center_pt, *output_pt, distance/1000, unmangler,additional_pj, *row[2:]])
+                addFeature(shplayer, *input_pt, *center_pt, *output_pt, distance/1000, unmangler, " ", " ".join(row[2:]))
 
-                print("{}: {}, {}, {}".format(i, *output_pt, unmangler, distance/1000))
-            except:
-                writer.writerow(["error","","","","","","","","",*row])
+            print("{}: {}, {}, {}".format(i, *output_pt, unmangler, distance/1000))
+            #except:
+                #writer.writerow(["error","","","","","","","","",*row])
+
+        data_source.Destroy()
 

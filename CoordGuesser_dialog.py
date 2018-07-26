@@ -100,6 +100,13 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         self.fromMapRadioButton.pressed.connect(self.toggleFromLongLat)
         self.fromLayerRadioButton.pressed.connect(self.toggleFromLayer)
 
+    def loadLayer(self, filepath):
+        # https://gis.stackexchange.com/questions/256259/loading-layer-and-check-for-polygon-wkbtype-in-qgis-3-0
+        layer = self.iface.addVectorLayer(filepath, "CoordGuesserOutput", "ogr")
+        if not layer:
+            print("layer failed to load")
+            self.changeMessage("ERROR: batch layer failed to load")
+
 
     def toggleNoGuess(self):
         self.lineEdit_latLong.setEnabled(False)
@@ -142,7 +149,7 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         self.fromLayerRadioButton.setChecked(True)
         if int == 2:
             self.selectFeatureComboBox.setEnabled(False)
-        elif int ==0:
+        elif int == 0:
             self.selectFeatureComboBox.setEnabled(True)
 
     def captureButtonClick(self):
@@ -150,7 +157,7 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         self.canvas.setMapTool(self.coorTool)
         self.coorTool.clean()
 
-    def setCoor(self,x,y):
+    def setCoor(self, x, y):
         self.lineEdit_latLong.setText(f"{x:10.10f}, {y:10.10f}")
 
     def getLayers(self, destinationComboBox):

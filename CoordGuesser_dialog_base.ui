@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>491</width>
-    <height>633</height>
+    <height>836</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -104,7 +104,7 @@
       <string>Inputs:</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="7" column="0" colspan="5">
+      <item row="8" column="0" colspan="5">
        <widget class="QGroupBox" name="groupBox">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -307,7 +307,7 @@
         </property>
        </widget>
       </item>
-      <item row="6" column="0">
+      <item row="7" column="0">
        <widget class="QLabel" name="label_10">
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A valid UTM zone (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;60&lt;/span&gt;)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -335,6 +335,30 @@
         <attribute name="buttonGroup">
          <string notr="true">buttonGroup_singleBatch</string>
         </attribute>
+       </widget>
+      </item>
+      <item row="7" column="1" colspan="3">
+       <widget class="QLineEdit" name="lineEdit_addProj">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A valid PROJ.4 string (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;+proj=longlat +datum=WGS84 +no_defs&lt;/span&gt;) or a UTM zone (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;60&lt;/span&gt;)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1" colspan="3">
+       <widget class="QLineEdit" name="lineEdit_filePath">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="0" colspan="5">
+       <widget class="QPushButton" name="pushButton_Go">
+        <property name="text">
+         <string>Go!</string>
+        </property>
        </widget>
       </item>
       <item row="3" column="0">
@@ -370,31 +394,7 @@
         </property>
        </widget>
       </item>
-      <item row="8" column="0" colspan="5">
-       <widget class="QPushButton" name="pushButton_Go">
-        <property name="text">
-         <string>Go!</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1" colspan="3">
-       <widget class="QLineEdit" name="lineEdit_filePath">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="1" colspan="3">
-       <widget class="QLineEdit" name="lineEdit_addProj">
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A valid PROJ.4 string (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;+proj=longlat +datum=WGS84 +no_defs&lt;/span&gt;) or a UTM zone (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;60&lt;/span&gt;)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="0">
+      <item row="6" column="0">
        <widget class="QCheckBox" name="checkBox_attr">
         <property name="enabled">
          <bool>false</bool>
@@ -422,6 +422,20 @@
        <widget class="QLineEdit" name="scrambled">
         <property name="text">
          <string>9°21'2.19&quot;S, 40°42'37.25&quot;O</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1" colspan="3">
+       <widget class="QCheckBox" name="checkBox">
+        <property name="text">
+         <string>csv</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="4">
+       <widget class="QCheckBox" name="checkBox_2">
+        <property name="text">
+         <string>Shapefile</string>
         </property>
        </widget>
       </item>
