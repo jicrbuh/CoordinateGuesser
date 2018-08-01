@@ -70,6 +70,16 @@ def addFields(layer):
     layer.CreateField(field_data)
 
 
+def createWKBpoly(pointList):
+    # POLYGON ((x1 y1, x2 y2, x1 y1))
+    wkb = "POLYGON (("
+    for point in pointList:
+        wkb = wkb + "{:f} {:f}".format(point[0], point[1])
+    wkb = wkb + "))"
+    return wkb
+
+
+
 def addFeature(layer, mangx, mangy, guessx, guessy, x,y, distance,method, pj, data=None):
 
     feature = ogr.Feature(layer.GetLayerDefn())
@@ -85,7 +95,6 @@ def addFeature(layer, mangx, mangy, guessx, guessy, x,y, distance,method, pj, da
 
     # create the WKT for the feature using Python string formatting
     wkt = "POINT({:f} {:f})".format(x, y)
-    print("wkt: {}".format(wkt))
 
     # Create the point from the Well Known Txt
     point = ogr.CreateGeometryFromWkt(wkt)
@@ -96,6 +105,63 @@ def addFeature(layer, mangx, mangy, guessx, guessy, x,y, distance,method, pj, da
     layer.CreateFeature(feature)
     # Destroy the feature to free resources
     feature.Destroy()
+
+
+# https://gis.stackexchange.com/questions/92754/how-can-i-group-points-to-make-polygon-via-python
+# https://gis.stackexchange.com/questions/254444/deleting-selected-features-from-vector-ogr-in-gdal-python
+
+def createPolyFile(input_file, output_file):
+    rowslist =[]
+    myencoding = get_encoding_by_bom(input_file)
+    with open(input_file, newline='', encoding=myencoding) as csv_input:
+        reader = csv.reader(csv_input, delimiter=',', quotechar='"')
+        rowslist = list(reader) #a list of lists. each list contains one row
+
+    driver = ogr.GetDriverByName("ESRI Shapefile")
+    shapepath = os.path.splitext(output_file)[0] + ".shp"
+    if os.path.exists(shapepath):
+        os.remove(shapepath)
+    data_source = driver.CreateDataSource(shapepath)
+
+    srs = osr.SpatialReference()
+    srs.ImportFromEPSG(4326)
+    shplayer = data_source.CreateLayer("UnmangledCoords", srs, ogr.wkbPolygon)
+    addFields(shplayer)
+
+    usedList = [0]*len(rowslist)
+
+    for i in range(len(rowslist)):
+        row = rowslist[i]
+
+        #if point is used, empty or header, break
+        if (usedList[i] or row[0] == "" or i==0):
+            break
+        usedList[i] = 1
+        ring = ogr.Geometry(ogr.wkbLinearRing) # create ring
+        firstPoint = (float(row[4]), float(row[5])) # save  coordinates. why?
+
+        # add point data
+
+        for j in range(len(rowslist)):
+            innerRow = rowslist[j]
+            # if point is already in a polygon, skip it
+            if usedList[j]:
+                break
+            # if both points have the same guess, add to polygon and mark as used
+            if (row[2] == innerRow[2]) and (row[3] == innerRow[3]):
+                ring.AddPoint(float(innerRow[4]), float(innerRow[5]))
+                usedList[j] = 1
+
+        # Add first point again to ring to close polygon
+        ring.AddPoint(float(row[4]), float(row[5]))
+
+
+        #create feature
+
+        # Set the feature geometry using the point
+        feature.SetGeometry(ring)
+
+
 
 #todo add https://pcjericks.github.io/py-gdalogr-cookbook/layers.html#create-a-new-shapefile-and-add-data
 #todo documentation http://gdal.org/java/index.html?org/gdal/ogr/FieldDefn.html
