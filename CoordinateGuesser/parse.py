@@ -85,7 +85,7 @@ def distInMeters(p1, p2, transform,approxPoint):
      #   #Geo = Geodesic.WGS84
       #  #dist = Geo.Inverse(x1, y1, x2, y2)
         distance = 110574*dist(p1, approxPoint, transform)
-        print("approx distance: " + str(distance))
+        #print("approx distance: " + str(distance))
     return distance
 
 #inp - string divided by \t or tuple

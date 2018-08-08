@@ -408,7 +408,7 @@
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check if the attribute for every scrambled coordinate is different and in the third row in the csv file&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
-         <string> Attribute choice is in file</string>
+         <string>Attribute choice in file</string>
         </property>
         <property name="checked">
          <bool>false</bool>
