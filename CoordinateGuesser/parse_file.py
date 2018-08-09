@@ -127,7 +127,6 @@ def createDataSourceShp(output_file):
 
 def readFileIntoList(input_file):
     rowslist = []
-
     with open(input_file) as csv_input:
         reader = csv.reader(csv_input, delimiter=',', quotechar='|')
         rowslist = list(reader)  # a list of lists. each list contains one row
