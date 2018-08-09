@@ -198,11 +198,11 @@ def parseFileNoCol(input_file, output_file, guessX, guessY, layer=None, field=No
         center_pt = ("", "")
         usingGuess = guessY and guessX
         if usingGuess:
-            center_pt = (guessX,guessY)
+            center_pt = (guessX, guessY)
         # if there's layer and field then we use the third column
         usingField = layer and field
 
-        for i,row in enumerate(reader): # i is the index of the row
+        for i, row in enumerate(reader):  # i is the index of the row
 
             #try:
 

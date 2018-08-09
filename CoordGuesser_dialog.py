@@ -20,7 +20,9 @@
  *                                                                         *
  ***************************************************************************/
 """
-
+#todo check which distance calculation doesn't work
+#todo create csv or point file or polygon file
+#todo ui radio buttons aren't in group. choic attr in file doesn't turn on the comboboxes
 import os
 
 from PyQt5 import QtWidgets, QtCore
@@ -45,12 +47,7 @@ def staticSetCoor(destinationLineEdit,x,y):
 #new declaration of ui
 MainWindowUI, MainWindowBase = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'CoordGuesser_dialog_base.ui'))
 
-BrowserUI, BrowserBase = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'CoordGuesser_fileBrowser_240118.ui'))
 
-#old declaration of ui
-#FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'CoordGuesser_dialog_base.ui'))
-
-#class CoordGuesserDialog(QtWidgets.QDialog, FORM_CLASS): #old
 class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
     def tell(self, mess):
         QtWidgets.QMessageBox.information(self, "DEBUG: ", str(mess))
