@@ -20,9 +20,9 @@
  *                                                                         *
  ***************************************************************************/
 """
-#todo check which distance calculation doesn't work
-#todo create csv or point file or polygon file
-#todo ui radio buttons aren't in group. choic attr in file doesn't turn on the comboboxes
+
+# todo create csv or point file or polygon file
+
 import os
 
 from PyQt5 import QtWidgets, QtCore
@@ -144,8 +144,10 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
 
     def onChangedAttrCheckBox(self,int):
         self.fromLayerRadioButton.setChecked(True)
+        self.toggleFromLayer()
         if int == 2:
             self.selectFeatureComboBox.setEnabled(False)
+
         elif int == 0:
             self.selectFeatureComboBox.setEnabled(True)
 

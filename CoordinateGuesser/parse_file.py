@@ -177,6 +177,93 @@ def createPolyFile(input_file, output_file):
     data_source.Destroy()
 
 
+def read_to_coord_list(input_file, usingField):
+    myencoding = get_encoding_by_bom(input_file)
+    coordlist = []
+    with open(input_file, newline='', encoding=myencoding) as csv_input:
+        reader = csv.reader(csv_input, delimiter=',', quotechar='"')
+        for i, row in enumerate(reader):
+            if usingField:
+                coordelem = SingleCoord((row[0], row[1]), row[2])
+                coordelem.data = row[3:]
+            else:
+                coordelem = SingleCoord((row[0], row[1]))
+                coordelem.data = row[2:]
+            coordlist.append(coordelem)
+    return coordlist
+
+
+def parse_coord_list(coordlist):
+    for elem in coordlist:
+        if elem.center_pt is not None:  # if using guess for calculation
+            try:
+                elem.output_pt, elem.unmangler, elem.distance = parseNoGuess(elem.input_pt)
+                elem.distance = elem.distance/1000  # m to km
+            except:
+                elem.err = 1
+        else:
+            try:
+                elem.output_pt, elem.unmangler, elem.distance = parseWithGuess(elem.input_pt, elem.center_pt, elem.additional_pj)
+            except:
+                elem.err = 1
+    return coordlist
+
+
+def parse_file(input_file, guessX, guessY, tofile, guesslayer=None, guessfield=None, additional_pj=[]):
+
+    usingGuess = guessY and guessX
+    usingField = guesslayer and guessfield  # if there's layer and field then we use the third column
+    coordlist = read_to_coord_list(input_file, usingField)
+
+    if usingGuess:
+        center_pt = (guessX, guessY)
+        for elem in coordlist:
+            elem.center_pt = center_pt
+
+    elif usingField:
+        for elem in coordlist:
+            elem.center_pt = getFeature(guesslayer, guessfield, elem.attr)
+
+    coordlist = parse_coord_list(coordlist)
+    # save to file (csv, point shapefile or polygon shapefile)
+    if tofile == 1:
+        to_csv(input_file, coordlist)
+    elif tofile == 2:
+        to_points(input_file, coordlist)
+    elif tofile == 3:
+        to_poly(input_file, coordlist)
+
+
+def in_path_to_out(input_path):
+    return os.path.splitext(input_path)[0] + "_output"
+
+
+def to_points(input_file, coordlist):
+    output_file = in_path_to_out(input_file) + ".shp"
+
+
+def to_poly(input_file, coordlist):
+    output_file = in_path_to_out(input_file) + ".shp"
+    
+
+
+def to_csv(input_file, coordlist):
+    output_file = in_path_to_out(input_file) + ".csv"
+    with open(output_file, 'w', newline='') as csv_output:
+        writer = csv.writer(csv_output, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        writer.writerow(["mangled_X", "mangled_Y", "guess_X", "guess_Y", "unmangled_X",
+                        "unmangled_Y", "distance_[km]", "method", "additional_pj", "other_data"])
+
+        for i, elem in coordlist:
+            if elem.err != 1:
+                writer.writerow([*elem.input_pt, *elem.center_pt, *elem.output_pt, elem.distance,
+                                elem.unmangler, elem.additional_pj, *elem.data])
+                print("{}: {}, {}, {}".format(i, *elem.input_pt, elem.unmangler, elem.distance))
+            else:
+                writer.writerow(["error", "", "", "", "", "", "", "", "", *elem.data])
+                print("{}: error". format(i))
+
+
 #todo add https://pcjericks.github.io/py-gdalogr-cookbook/layers.html#create-a-new-shapefile-and-add-data
 #todo documentation http://gdal.org/java/index.html?org/gdal/ogr/FieldDefn.html
 def parseFileNoCol(input_file, output_file, guessX, guessY, layer=None, field=None, additional_pj=[]):
@@ -193,8 +280,8 @@ def parseFileNoCol(input_file, output_file, guessX, guessY, layer=None, field=No
         shplayer = data_source.CreateLayer("UnmangledCoords", srs, ogr.wkbPoint)
         addFields(shplayer)
 
-        writer.writerow(["mangled X", "mangled Y", "guess X", "guess Y", "unmangled X",
-                         "unmangled Y", "distance [km]", "method","additional_pj","other data from file"])
+        writer.writerow(["mangled_X", "mangled_Y", "guess_X", "guess_Y", "unmangled_X",
+                         "unmangled_Y", "distance_[km]", "method","additional_pj","other_data"])
         center_pt = ("", "")
         usingGuess = guessY and guessX
         if usingGuess:
@@ -207,27 +294,85 @@ def parseFileNoCol(input_file, output_file, guessX, guessY, layer=None, field=No
             #try:
 
             input_pt = (row[0], row[1])
-
             if usingGuess:
                 output_pt, unmangler, distance= parseWithGuess(input_pt,(guessX,guessY),additional_pj)
+                distance = distance/1000
             elif usingField:
                 attr = row[2]
                 center_pt = getFeature(layer, field, attr)
                 output_pt, unmangler, distance = parseWithGuess(input_pt, center_pt, additional_pj)
+                distance = distance / 1000
             else:
                 output_pt, unmangler, distance = parseNoGuess(input_pt)
 
             if usingField:
-                writer.writerow([*input_pt, *center_pt, *output_pt, distance/1000, unmangler,additional_pj, *row[3:]])
-                addFeature(shplayer, *input_pt,*center_pt, *output_pt, distance/1000, unmangler, " "," ".join(row[3:]))
+                writer.writerow([*input_pt, *center_pt, *output_pt, distance, unmangler,additional_pj, *row[3:]])
+                addFeature(shplayer, *input_pt, *center_pt, *output_pt, distance, unmangler, " "," ".join(row[3:]))
             else:
-                writer.writerow([*input_pt, *center_pt, *output_pt, distance/1000, unmangler,additional_pj, *row[2:]])
-                addFeature(shplayer, *input_pt, *center_pt, *output_pt, distance/1000, unmangler, " ", " ".join(row[2:]))
+                writer.writerow([*input_pt, *center_pt, *output_pt, distance, unmangler,additional_pj, *row[2:]])
+                addFeature(shplayer, *input_pt, *center_pt, *output_pt, distance, unmangler, " ", " ".join(row[2:]))
 
-            print("{}: {}, {}, {}".format(i, *output_pt, unmangler, distance/1000))
+            print("{}: {}, {}, {}".format(i, *output_pt, unmangler, distance))
             #except:
                 #writer.writerow(["error","","","","","","","","",*row])
 
         data_source.Destroy()
 
     createPolyFile(output_file, output_file)
+
+
+class SingleCoord:
+    def __init__(self, input_pt, attr=None, center_pt=None, output_pt=None, distance=None, unmangler=None, additional_pj=None, data=None):
+        self.input_pt = input_pt
+        self.attr = attr
+        self.center_pt = center_pt
+        self.output_pt = output_pt
+        self.distance = distance
+        self.unmangler = unmangler
+        self.additional_pj = additional_pj
+        self.data = data
+        self.group = 0
+        self.err = 0
+
+    def write_coord(self, mywriter):
+        pass
+
+    def parse_coord(self):
+        pass
+
+    def set_fields(self, feature):
+        feature.SetField("Mangled X", self.input_pt[0])
+        feature.SetField("Mangled Y", self.input_pt[1])
+        feature.SetField("Guess X", self.center_pt[0])
+        feature.SetField("Guess Y", self.center_pt[1])
+        feature.SetField("distance", self.distance)
+        feature.SetField("Method", self.unmangler)
+        feature.SetField("additional projection", self.additional_pj)
+        feature.SetField("Other Data", self.data)
+
+    def parse_with_guess(self):
+        output_guesses = Parse(self.input_pt, self.center_pt, self.additional_pj)
+        first_guess = output_guesses[0]
+        self.output_pt = first_guess[0]
+        self.unmangler = first_guess[1]
+        self.distance = first_guess[2]/1000
+
+    def parse_no_guess(self):
+        output_guesses = Parse( input_pt, None, additional_pj)
+        first_guess = output_guesses[0]
+        output_pt, unmangler = first_guess[0], first_guess[1]
+        distance = "no guess given"
+        return output_pt, unmangler, distance
+
+    def parse_with_layer(self, layer, field, value):
+        self.center_pt = getFeature(layer, field, value)
+        self.parse_with_guess()
+
+
+    class Attr:
+        def __init__(self, value, name):
+            self.value = value
+            self.name = name
+
+
+

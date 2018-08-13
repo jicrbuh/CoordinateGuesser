@@ -32,11 +32,12 @@ class concattedDMS:
         dd = 0 if lend == 0 else int(x[:lend])
         mm = int(x[lend:lend+2])
         ss = int(x[lend+2:])
-        return sign*dd,sign*mm,sign*ss
+        return sign*dd, sign*mm, sign*ss
+
     def can(self, x):
         x, sign, pos = extractSignfromGeo(x)
         try:
-            d,m,s = self.split(x)
+            d, m, s = self.split(x)
         except ValueError:
             return -1, None
         if d > 360 or d < -180:
@@ -48,9 +49,11 @@ class concattedDMS:
         if d > 90 or d < -90:
             pos = 0
         return pos, (d,m,s,sign)
+
     def toHalfCor(self, x, canval):
-        d,m,s,sign = canval
+        d, m, s, sign = canval
         return (d+(m+s/60.0)/60.0) * sign
+
     def __str__(self):
         return "ddmmss"
 
@@ -63,6 +66,7 @@ class identDMS:
             x = x.replace(b, ' ', 1)
         split = [i for i in re.split('[^\d.,]+',x,3) if len(i) > 0]
         return split
+
     def can(self,x):
         x,sign,pos = extractSignfromGeo(x)
         try:
@@ -74,13 +78,15 @@ class identDMS:
         if len(split) != 3:
             return -1, None
         try:
-            d,m,s = map(lambda s: tofloatindif(s), split)
+            d, m, s = map(lambda s: tofloatindif(s), split)
         except ValueError:
             return -1, None
         return pos, (d,m,s,sign)
+
     def toHalfCor(self, x, canval):
         d,m,s, sign = canval
         return (d+(m+s/60.0)/60.0) * sign
+
     def __str__(self):
         return "d m s"
 
@@ -98,8 +104,10 @@ class identDecDegGeo:
         if d > 90 or d < -90:
             pos = 0
         return pos, d
+
     def toHalfCor(self, x, canval):
         return canval
+
     def __str__(self):
         return "geodecdeg"
 
@@ -121,8 +129,10 @@ class identDecMinGeo:
         if d > 90 or d < -90:
             pos = 0
         return pos, d
+
     def toHalfCor(self, x, canval):
         return canval
+
     def __str__(self):
         return "geodecmin"
 

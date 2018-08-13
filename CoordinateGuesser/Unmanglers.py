@@ -1,5 +1,6 @@
 import osr
 
+
 class Unmangler:
     """base class for unmanglers"""
     def __init__(self,xUnmangler, yUnmangler = None):
@@ -16,7 +17,8 @@ class Unmangler:
         checks whether the Unmangler can handle a coordinate
         :param x: the x component of the coordinate
         :param y: the y component of the coordinate
-        :return: a tuple of whether the unmangler cna handle the coordinate, and two values to be given as arguments to the toCor function if so
+        :return: a tuple of whether the unmangler cna handle the coordinate, and two values to be given as arguments
+        to the toCor function if so
         """
         ret, cx = self.x.can(x)
         if ret == -1 or ret == 1:
@@ -25,7 +27,8 @@ class Unmangler:
         if ret == -1 or ret == 0:
             return False, None, None
         return True, cx, cy
-    def toCor(self,x,cx,y,cy):
+
+    def toCor(self, x, cx, y, cy):
         """
         transforms coordinates that passed can into actual geographic coordinates
         :param x: the original x component of the coordinate
@@ -35,12 +38,14 @@ class Unmangler:
         :return: an unmangler geographic coordinate
         """
         return self.x.toHalfCor(x, cx), self.y.toHalfCor(y, cy)
+
     def __str__(self):
         if self.x == self.y:
             halcore = str(self.x)
         else:
             halcore = "x: "+str(self.x)+", y: "+str(self.y)
         return "regular WGS84GEO, submanglers: "+halcore
+
 
 class UtmUnmangler (Unmangler):
     """
@@ -49,9 +54,11 @@ class UtmUnmangler (Unmangler):
     def __init__(self, projstring, xUnmangler, yUnmangler=None):
         Unmangler.__init__(self, xUnmangler, yUnmangler)
         self.projstring = projstring
-    def toCor(self,x,cx,y,cy):
-        ux, uy = Unmangler.toCor(self,x,cx,y,cy)
-        return self.convertToGeo(ux,uy)
+
+    def toCor(self, x, cx, y, cy):
+        ux, uy = Unmangler.toCor(self, x, cx, y, cy)
+        return self.convertToGeo(ux, uy)
+
     def convertToGeo(self,ux,uy):
         destproj = osr.SpatialReference()
         destproj.ImportFromProj4("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
@@ -62,12 +69,14 @@ class UtmUnmangler (Unmangler):
         t = transform.TransformPoint(ux, uy)
         dx, dy, _ = t
         return dx, dy
+
     def __str__(self):
         if self.x == self.y:
             halcore = str(self.x)
         else:
             halcore = "x: " + str(self.x) + ", y: " + str(self.y)
         return "projection converter mangler from projection ("+ self.projstring +"), submanglers: " + halcore
+
 
 class UtmBiasedUnmangler(UtmUnmangler):
     """
@@ -77,11 +86,13 @@ class UtmBiasedUnmangler(UtmUnmangler):
         UtmUnmangler.__init__(self, projstring, xUnmangler, yUnmangler)
         self.yoffset = yoffset
         self.xoffset = xoffset
+
     def toCor(self,x,cx,y,cy):
         ux, uy = Unmangler.toCor(self, x, cx, y, cy)
         ux += self.xoffset
         uy += self.yoffset
         return self.convertToGeo(ux, uy)
+
     def __str__(self):
         if self.x == self.y:
             halcore = str(self.x)
@@ -89,18 +100,23 @@ class UtmBiasedUnmangler(UtmUnmangler):
             halcore = "x: " + str(self.x) + ", y: " + str(self.y)
         return "projection converter mangler from projection ("+ self.projstring +") with biases ({}, {}), submanglers: ".format(self.xoffset,self.yoffset) + halcore
 
+
 class InverterUnmangler:
     """
     an unmangler wrapper thta inverts the input x and y
     """
     def __init__(self, base):
         self.base = base
-    def can(self,x,y):
-        return self.base.can(y,x)
+
+    def can(self, x, y):
+        return self.base.can(y, x)
+
     def toCor(self, x, cx, y, cy):
-        return self.base.toCor(y,cx,x,cy)
+        return self.base.toCor(y, cx, x, cy)
+
     def __str__(self):
         return "Inverted unmangler of "+str(self.base)
+
 
 class UtmBiasedInvertedUnmangler(UtmBiasedUnmangler):
     def __init__(self, xoffset, yoffset, projstring, xUnmangler, yUnmangler=None):
@@ -108,8 +124,8 @@ class UtmBiasedInvertedUnmangler(UtmBiasedUnmangler):
 
     def toCor(self,x,cx,y,cy):
         temp = x
-        x=y
-        y=temp
+        x = y
+        y = temp
         ux, uy = Unmangler.toCor(self, x, cx, y, cy)
         ux += self.xoffset
         uy += self.yoffset

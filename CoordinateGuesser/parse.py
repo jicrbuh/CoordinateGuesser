@@ -74,24 +74,24 @@ def dist(p1, p2, transform):
     return op.Distance(p2)
 
 
-def distInMeters(p1, p2, transform,approxPoint):
+def distInMeters(p1, p2, transform, approxPoint):
     x1, y1 = p1[0], p1[1]
     x2, y2 = p2[0], p2[1]
+    print('distance between {},{} and {},{}'.format(x1, y1, x2, y2))
     g = Geod(ellps='WGS84')  # Use WGS84
-    distance = 1
     try:
-       az12, az21, distance = g.inv(x1, y1, x2, y2)
+        az12, az21, distance = g.inv(x1, y1, x2, y2)
+        print("exact distance (km): " + str(distance / 1000))
     except ValueError:
      #   #Geo = Geodesic.WGS84
       #  #dist = Geo.Inverse(x1, y1, x2, y2)
         distance = 110574*dist(p1, approxPoint, transform)
-        #print("approx distance: " + str(distance))
+        print("approx distance (km): " + str(distance/1000))
     return distance
 
-#inp - string divided by \t or tuple
-"""inp = tuple,string"""
-#todo make this more visible
-def Parse(inp, approxPoint = None, additionalprojs = [],delimiter = '[\t,]'):
+
+# todo make this more visible
+def Parse(inp, approxPoint = None, additionalprojs = [], delimiter = '[\t,]'):
     """
     attempts to parse the input string into likely points
     :param inp: the mangled coordinate string
@@ -111,14 +111,19 @@ def Parse(inp, approxPoint = None, additionalprojs = [],delimiter = '[\t,]'):
         can, cx, cy = u.can(ix, iy)
         if not can:
             continue
-        suspects.append((u.toCor(ix,cx,iy,cy), str(u)))
+        # check if y is between -90 and 90. if not then can = False
+        realx, realy = u.toCor(ix, cx, iy, cy)
+        if realy > 90 or realy < -90:
+            continue
+
+        suspects.append((u.toCor(ix, cx, iy, cy), str(u)))
 
     if approxPoint is None:
         return suspects
 
     destproj = osr.SpatialReference()
     destproj.ImportFromProj4("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
-    tupleAppPoint=approxPoint
+    tupleAppPoint = approxPoint
     ap = Geometry(wkbPoint)
     ap.AddPoint(*approxPoint)
 
@@ -126,10 +131,10 @@ def Parse(inp, approxPoint = None, additionalprojs = [],delimiter = '[\t,]'):
     approxPoint = ap
 
     dsuspects = []
-    for s,u in suspects:
-        d = distInMeters(s,tupleAppPoint,destproj,approxPoint) #destproj is wgs84 geo
+    for s, u in suspects:
+        d = distInMeters(s,tupleAppPoint,destproj,approxPoint)  # destproj is wgs84 geo
         #d = dist(s, approxPoint, destproj)
-        dsuspects.append((s,u,d))
+        dsuspects.append((s, u, d))
 
     dsuspects.sort(key=lambda a:a[-1])
     return dsuspects
