@@ -411,7 +411,7 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         inputPath = self.lineEdit_filePath.text()
         (dirPath, fileName) = os.path.split(os.path.abspath(inputPath))
 
-        newFileName = os.path.splitext(fileName)[0] +"_output" +'.csv'
+        newFileName = os.path.splitext(fileName)[0] + "_output" + '.csv'
         outputPath = os.path.join(dirPath, newFileName)
         return inputPath, outputPath
 
