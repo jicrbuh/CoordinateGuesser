@@ -32,41 +32,10 @@
          <string/>
         </property>
         <layout class="QGridLayout" name="gridLayout_5">
-         <item row="3" column="2">
-          <widget class="QCheckBox" name="checkBox">
-           <property name="text">
-            <string>polygon</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_5">
-           <property name="text">
-            <string>Input csv file:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QCheckBox" name="checkBox_2">
-           <property name="text">
-            <string>csv</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0" colspan="2">
-          <widget class="QCheckBox" name="checkBox_attr">
+         <item row="0" column="1" colspan="2">
+          <widget class="QLineEdit" name="lineEdit_filePath">
            <property name="enabled">
             <bool>false</bool>
-           </property>
-           <property name="text">
-            <string>Attribute choice in file</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QCheckBox" name="checkBox_3">
-           <property name="text">
-            <string>points</string>
            </property>
           </widget>
          </item>
@@ -83,10 +52,51 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="1" colspan="2">
-          <widget class="QLineEdit" name="lineEdit_filePath">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>Input CSV file:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0" colspan="2">
+          <widget class="QCheckBox" name="checkBox_attr">
            <property name="enabled">
             <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>Attribute choice in file</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QRadioButton" name="radioCSV">
+           <property name="text">
+            <string>CSV</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="2">
+          <widget class="QRadioButton" name="radioPoly">
+           <property name="text">
+            <string>Polygon</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QRadioButton" name="radioPoints">
+           <property name="text">
+            <string>Points</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_12">
+           <property name="text">
+            <string>Output Format:</string>
            </property>
           </widget>
          </item>

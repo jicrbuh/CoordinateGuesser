@@ -77,16 +77,16 @@ def dist(p1, p2, transform):
 def distInMeters(p1, p2, transform, approxPoint):
     x1, y1 = p1[0], p1[1]
     x2, y2 = p2[0], p2[1]
-    print('distance between {},{} and {},{}'.format(x1, y1, x2, y2))
+    # print('distance between {},{} and {},{}'.format(x1, y1, x2, y2))
     g = Geod(ellps='WGS84')  # Use WGS84
     try:
         az12, az21, distance = g.inv(x1, y1, x2, y2)
-        print("exact distance (km): " + str(distance / 1000))
+        # print("exact distance (km): " + str(distance / 1000))
     except ValueError:
      #   #Geo = Geodesic.WGS84
       #  #dist = Geo.Inverse(x1, y1, x2, y2)
         distance = 110574*dist(p1, approxPoint, transform)
-        print("approx distance (km): " + str(distance/1000))
+        # print("approx distance (km): " + str(distance/1000))
     return distance
 
 
@@ -99,8 +99,10 @@ def Parse(inp, approxPoint = None, additionalprojs = [], delimiter = '[\t,]'):
     :param additionalprojs: additional projections to consider, check genUnmanglers's doc for additional info.
     :return: a list of potiental unmangled coordinates, along with the unmnaglers that unmangled it. If approxPoint is provided, each point will also have the distance to it.
     """
+    if additionalprojs is None:
+        additionalprojs = []
     if isinstance(inp, str):
-        inp = re.split(delimiter,inp,1)
+        inp = re.split(delimiter, inp, 1)
     ix, iy = inp
     ix = fixdmschars(ix)
     iy = fixdmschars(iy)

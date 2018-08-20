@@ -21,8 +21,6 @@
  ***************************************************************************/
 """
 
-# todo create csv or point file or polygon file
-
 import os
 
 from PyQt5 import QtWidgets, QtCore
@@ -64,15 +62,17 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         self.canvas = iface.mapCanvas()
         self.iface = iface
         self.getLayers(self.selectLayerComboBox)
+        # field that saves the marker for the guess
         self.VMarker = QgsVertexMarker(self.canvas)
         self.VMarker.hide()
-        self.coorTool = getCoordinateTool(self,self.canvas,self.setCoor, QgsProject.instance(),self.VMarker)
+        self.coorTool = getCoordinateTool(self,self.canvas,self.setCoor, QgsProject.instance(), self.VMarker)
         #unmangledMarker = QgsVertexMarker(self.canvas)
         self.unmangledMarker = QgsVertexMarker(self.canvas)
         self.unmangledMarker.setColor(Qt.blue)
         self.unmangledMarker.hide()
         self.unmangledMarker.setPenWidth(3)
         self.VMarker.setPenWidth(3)
+
         if self.noGivenRadioButton.isChecked():
             self.toggleNoGuess()
         elif self.fromMapRadioButton.isChecked():
@@ -272,7 +272,6 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
        #     (x,y) = coorTransform(centerPoint, layerCRS, QgsProject.instance())
         #this line changes the coor in the lineEdit_latLong
 
-
     def guessCoor(self):
         # coortext is the scrambled coor, xydelim is the user's delimiter
         coorText = self.scrambled.text()
@@ -280,8 +279,7 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         layer = None
         field = None
 
-
-        #single mode
+        # single mode
         if self.radioButton_single.isChecked():
             # (x, y) = re.split(self.xydelim.text(), coorText, 1)
             # if the delimiter isn't found in the user's scrambled text an error message
@@ -299,27 +297,27 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
 
             try:
                 if self.noGivenRadioButton.isChecked():
-                    output_guesses = Parse((x, y),None,additionProj) #uncomment if you don't want parse to split the str coortext
-                    #output_guesses = Parse(coorText, delimiter=self.xydelim.text())
-                    self.showOutputs(output_guesses,isguess=False)
+                    output_guesses = Parse((x, y), None, additionProj) #uncomment if you don't want parse to split the str coortext
+                    # output_guesses = Parse(coorText, delimiter=self.xydelim.text())
+                    self.show_outputs(output_guesses, isguess=False)
 
                 if self.fromMapRadioButton.isChecked():
                     (guessX, guessY) = self.lineEdit_latLong.text().split(',') #guess is the point the user clicked
                     (guessX, guessY) = (float(guessX.strip()), float(guessY.strip()))
                     output_guesses = Parse((x, y), (guessX,guessY),additionProj)
-                    self.showOutputs(output_guesses)
+                    self.show_outputs(output_guesses)
 
                 if self.fromLayerRadioButton.isChecked():
                     (guessX, guessY) = self.lineEdit_centroid.text().split(',') #guess is the centroid of selected feature
                     output_guesses = Parse((x, y), (float(guessX.strip()), float(guessY.strip())), additionProj)
-                    self.showOutputs(output_guesses)
+                    self.show_outputs(output_guesses)
             except:
                 self.changeMessage("ERROR: Could not parse coordinate")
                 self.clearOutpus()
-        #batch mode
+        # batch mode
         else:
             if self.checkBox_attr.isChecked():
-                #print("attr is checked")
+                # print("attr is checked")
 
                 layer = self.selectLayerComboBox.currentData()
                 path = layer.dataProvider().dataSourceUri()
@@ -327,22 +325,33 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
                 layer = path
 
                 field = self.selectFieldComboBox.currentText()
-                #print(path + " "+field)
+                # print(path + " "+field)
 
-            inputPath,outpuPath = self.getInOutPath()
-            guessX, guessY = (None,None)
+            inputPath, outpuPath = self.getInOutPath()
+            guessX, guessY = (None, None)
+            outformat = self.checkformat()
+
             if self.fromMapRadioButton.isChecked():
                 (guessX, guessY) = self.lineEdit_latLong.text().split(', ')  # guess is the point the user clicked
                 (guessX, guessY) = (float(guessX), float(guessY))
-            if self.fromLayerRadioButton.isChecked() and self.checkBox_attr.isChecked() == False:
-                (guessX, guessY) = self.lineEdit_centroid.text().split(', ')  # guess is the centroid of selected feature
+            if self.fromLayerRadioButton.isChecked() and self.checkBox_attr.isChecked() is False:
+                (guessX, guessY) = self.lineEdit_centroid.text().split(', ')  # guess is the centroid of the feature
             try:
-                parse_file.parseFileNoCol(inputPath,outpuPath,guessX,guessY,layer,field,additionProj)
+                parse_file.parse_file(inputPath, guessX, guessY, outformat, layer, field, additionProj)
                 self.clearOutpus()
-                self.changeMessage("File created successfully at: " + outpuPath)
+                self.changeMessage("File created successfully at: {}"
+                                   .format(os.path.split(os.path.abspath(inputPath))[0]))
             except PermissionError:
                 self.clearOutpus()
                 self.changeMessage("PermissionError: please close input and output files")
+
+    def checkformat(self):
+        if self.radioCSV.isChecked():
+            return 0
+        elif self.radioPoints.isChecked():
+            return 1
+        else:
+            return 2
 
     def getAdditionalProj(self):
         addProjText = self.lineEdit_addProj.text()
@@ -363,15 +372,15 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
                 return [addProjText]
         return []
 
-    def showOutputs(self, *output_guesses, isguess=True):
+    def show_outputs(self, *output_guesses, isguess=True):
         first_guess = output_guesses[0][0]
         # isguess - did user choose a guess (if chose "no given guess"-> isguess=False)
-        if isguess == True:
+        if isguess:
             output_pt, unmangler, distance = first_guess[0],first_guess[1],first_guess[2]
             self.out_xy.setText(f"{output_pt[0]:10.10f}, {output_pt[1]:10.10f}")
             distanceInKm = distance/1000
 
-            #self.distance.setText('{:.4f} deg'.format(distance))
+            # self.distance.setText('{:.4f} deg'.format(distance))
 
             self.distance.setText('{:,.3f} km'.format(distanceInKm))
             self.method_used.setText(unmangler)
@@ -404,7 +413,7 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
 
         newFileName = os.path.splitext(fileName)[0] +"_output" +'.csv'
         outputPath = os.path.join(dirPath, newFileName)
-        return (inputPath,outputPath)
+        return inputPath, outputPath
 
 
     def getFilePath(self, isShpFile):
