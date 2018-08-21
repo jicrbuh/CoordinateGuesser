@@ -45,6 +45,12 @@ def staticSetCoor(destinationLineEdit,x,y):
 #new declaration of ui
 MainWindowUI, MainWindowBase = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'CoordGuesser_dialog_base.ui'))
 
+# todo find a way to handle the header
+# todo only group points in batch mode if they're contiguous (minding blank lines)
+# todo save row 3 after other data if attr isn't chosen
+# todo fix the case of combining W\S + minus sign. aka double minus
+# todo handle other projs. get projs as a single proj4 string or a path to file containing multiple proj4 string
+
 
 class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
     def tell(self, mess):
@@ -96,6 +102,7 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         self.noGivenRadioButton.pressed.connect(self.toggleNoGuess)
         self.fromMapRadioButton.pressed.connect(self.toggleFromLongLat)
         self.fromLayerRadioButton.pressed.connect(self.toggleFromLayer)
+        self.iface.mapCanvas().mapCanvasRefreshed.connect(lambda: self.getLayers(self.selectLayerComboBox))
 
     def loadLayer(self, filepath):
         # https://gis.stackexchange.com/questions/256259/loading-layer-and-check-for-polygon-wkbtype-in-qgis-3-0
@@ -103,7 +110,6 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         if not layer:
             print("layer failed to load")
             self.changeMessage("ERROR: batch layer failed to load")
-
 
     def toggleNoGuess(self):
         self.lineEdit_latLong.setEnabled(False)
@@ -196,21 +202,21 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         # todo https://gis.stackexchange.com/questions/212618/check-particular-feature-exists-using-pyqgis
         selectedLayer = self.selectLayerComboBox.currentData()
         fieldList = []
+        if selectedLayer is not None:
+            fields = selectedLayer.fields()
 
-        fields = selectedLayer.fields()
+            try:
+                fields = sorted(fields, key=lambda field: field.name().lower(), reverse=True)
+            except AttributeError:
+                fields = sorted(fields, key=lambda field: field.name(), reverse=True)
 
-        try:
-            fields = sorted(fields, key=lambda field: field.name().lower(), reverse=True)
-        except AttributeError:
-            fields = sorted(fields, key=lambda field: field.name(), reverse=True)
+            self.selectFieldComboBox.clear()
 
-        self.selectFieldComboBox.clear()
-
-        for field in fields:
-            warnings.warn(str(field.name()))
-            self.selectFieldComboBox.insertItem(float('inf'), field.name(), field)
-        self.selectFieldComboBox.setCurrentIndex(0)
-        self.onFieldSelected(0)
+            for field in fields:
+                warnings.warn(str(field.name()))
+                self.selectFieldComboBox.insertItem(float('inf'), field.name(), field)
+            self.selectFieldComboBox.setCurrentIndex(0)
+            self.onFieldSelected(0)
 
     def onFieldSelected(self,ind):
         """after the user selects a field from the combobox, the feature combobox updates with the field values"""
@@ -228,7 +234,7 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
                 features = sorted(features, key=lambda feature: feature.attribute(selectedFieldName),
                                   reverse=True)
             except AttributeError:
-                features=sorted(features, key=lambda feature: feature.attribute(selectedFieldName).lower(), reverse=True)
+                features = sorted(features, key=lambda feature: feature.attribute(selectedFieldName).lower(), reverse=True)
 
             for feature in features:
                 myattr = feature.attribute(selectedFieldName)
@@ -304,7 +310,7 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
                 if self.fromMapRadioButton.isChecked():
                     (guessX, guessY) = self.lineEdit_latLong.text().split(',') #guess is the point the user clicked
                     (guessX, guessY) = (float(guessX.strip()), float(guessY.strip()))
-                    output_guesses = Parse((x, y), (guessX,guessY),additionProj)
+                    output_guesses = Parse((x, y), (guessX, guessY), additionProj)
                     self.show_outputs(output_guesses)
 
                 if self.fromLayerRadioButton.isChecked():
@@ -325,7 +331,6 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
                 layer = path
 
                 field = self.selectFieldComboBox.currentText()
-                # print(path + " "+field)
 
             inputPath, outpuPath = self.getInOutPath()
             guessX, guessY = (None, None)
@@ -337,13 +342,22 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
             if self.fromLayerRadioButton.isChecked() and self.checkBox_attr.isChecked() is False:
                 (guessX, guessY) = self.lineEdit_centroid.text().split(', ')  # guess is the centroid of the feature
             try:
-                parse_file.parse_file(inputPath, guessX, guessY, outformat, layer, field, additionProj)
+                filepath = parse_file.parse_file(inputPath, guessX, guessY, outformat, layer, field, additionProj)
                 self.clearOutpus()
                 self.changeMessage("File created successfully at: {}"
                                    .format(os.path.split(os.path.abspath(inputPath))[0]))
+                self.open_file(filepath, outformat)
             except PermissionError:
                 self.clearOutpus()
                 self.changeMessage("PermissionError: please close input and output files")
+
+    def open_file(self, filepath, outformat):
+        if outformat != 0:
+            try:
+                layer = self.iface.addVectorLayer(filepath, "", "ogr")
+            except:
+                self.clearOutpus()
+                self.changeMessage("Error: could not load file to QGIS. Try closing it")
 
     def checkformat(self):
         if self.radioCSV.isChecked():

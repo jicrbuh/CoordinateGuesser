@@ -21,11 +21,7 @@ def ogrCoorTransform (point, inSpatialRef):
     outSpatialRef = osr.SpatialReference()
     outSpatialRef.ImportFromEPSG(4326)
     coordTrans = osr.CoordinateTransformation(inSpatialRef, outSpatialRef)
-    #warnings.warn("point: " + str(point))  POINT (984310.580534765 190286.66966292)
-    #warnings.warn("point type: " + str(type(point))) point type: <class 'osgeo.ogr.Geometry'>
     #http://gdal.org/python/osgeo.ogr.Geometry-class.html
     clonepoint = point.Clone()
     clonepoint.Transform(coordTrans)
-    #warnings.warn("x,y: " + str(point.GetX())+ ", "+ str(point.GetY()))
-    #warnings.warn("clone x,y: " + str(clonepoint.GetX()) + ", " + str(clonepoint.GetY()))
     return (clonepoint.GetX(),clonepoint.GetY())

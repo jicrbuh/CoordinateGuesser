@@ -126,20 +126,57 @@ def create_data_source_shp(output_file):
     return data_source
 
 
-def read_to_coord_list(input_file, usingfield):
+def read_to_coord_list(input_file, using_field, using_guess):
     myencoding = get_encoding_by_bom(input_file)
     coordlist = []
     with open(input_file, newline='', encoding=myencoding) as csv_input:
         reader = csv.reader(csv_input, delimiter=',', quotechar='"')
-        for i, row in enumerate(reader):
-            if usingfield:
-                coordelem = SingleCoord((row[0], row[1]), row[2])
-                coordelem.data = row[3:]
-            else:
-                coordelem = SingleCoord((row[0], row[1]))
-                coordelem.data = row[2:]
-            # print(coordelem)
-            coordlist.append(coordelem)
+        lastgroup = 0
+        lastattr = None
+        if using_field:     # if using field, need to group according to row[2]
+            for i, row in enumerate(reader):
+                if row is not None:
+                    if row[2] != lastattr:  # if the attribute is different from the last coord's attribute
+                        lastgroup = lastgroup + 1
+
+                    coordelem = SingleCoord((row[0], row[1]), row[2])
+                    if row[3:] is not None:
+                        coordelem.data = row[3:]
+                    else:
+                        coordelem.data = []
+
+                    lastattr = row[2]
+                    coordelem.group = lastgroup
+                    coordlist.append(coordelem)
+
+                else:
+                    lastattr = None
+                    lastgroup = lastgroup + 1
+
+        elif using_guess:   # if using guess - all coords in same group.
+            for i, row in enumerate(reader):
+                if row is not None:
+                    coordelem = SingleCoord((row[0], row[1]))
+                    if row[2:] is not None:
+                        coordelem.data = row[2:]
+                    else:
+                        coordelem.data = []
+
+                    coordlist.append(coordelem)
+
+        else:               # if not using a guess - each in new group
+            for i, row in enumerate(reader):
+                if row is not None:
+                    coordelem = SingleCoord((row[0], row[1]))
+                    coordelem.group = lastgroup
+                    lastgroup = lastgroup + 1
+                    if row[2:] is not None:
+                        coordelem.data = row[2:]
+                    else:
+                        coordelem.data = []
+
+                    coordlist.append(coordelem)
+
     return coordlist
 
 
@@ -171,7 +208,7 @@ def print_coordlist(coordlist):
 def parse_file(input_file, guessx, guessy, fileformat, guesslayer=None, guessfield=None, additional_pj=[]):
     using_guess = guessy and guessx
     using_field = guesslayer and guessfield  # if there's layer and field then we use the third column
-    coordlist = read_to_coord_list(input_file, using_field)
+    coordlist = read_to_coord_list(input_file, using_field, using_guess)
 
     if using_guess:
         center_pt = (guessx, guessy)
@@ -186,15 +223,19 @@ def parse_file(input_file, guessx, guessy, fileformat, guesslayer=None, guessfie
 
     # save to file (csv, point shapefile or polygon shapefile)
     if fileformat == 0:
-        to_csv(input_file, coordlist)
+        return to_csv(input_file, coordlist)
     elif fileformat == 1:
-        to_points(input_file, coordlist)
+        return to_points(input_file, coordlist)
     elif fileformat == 2:
-        to_poly(input_file, coordlist)
+        return to_poly(input_file, coordlist)
 
 
 def in_path_to_out(input_path):
     return os.path.splitext(input_path)[0] + "_output"
+
+
+def in_path_to_dir(input_path):
+    return os.path.splitext(input_path)[0]
 
 
 def create_data_source(output_file):
@@ -237,43 +278,40 @@ def add_poly_feature(layer, mangx, mangy, guessx, guessy, wkt, distance, method,
     # Destroy the feature to free resources
     feature.Destroy()
 
-
+# todo fix i out of range + total crash
 def to_poly(input_file, coordlist):
-    output_file = in_path_to_out(input_file) + ".shp"
+    output_file = in_path_to_dir(input_file) + "_polygon_output.shp"
     data_source = create_data_source(output_file)
     srs = osr.SpatialReference()
     srs.ImportFromEPSG(4326)
     shplayer = data_source.CreateLayer("UnmangledCoords", srs, ogr.wkbPolygon)
     add_fields(shplayer)
-
+    i = 0
+    
     usedlist = [0] * len(coordlist)
-    coordlist = group_coords(coordlist)
-
     for i in range(len(coordlist)):
         elem = coordlist[i]
-        # if a group already used for a poly, or coord is empty, continue
-        if usedlist[i] or elem.output_pt is None:
+        usedlist[i] = 1
+        i = i + 1
+        if elem.output_pt is None:
             continue
         polylist = [(elem.output_pt[0], elem.output_pt[1])]
-        usedlist[i] = 1
 
-        # go over all coords and add them as polygons, grouped by their field group
-        for j in range(len(coordlist)):
-            loopcoord = coordlist[j]
-            if (loopcoord.group == elem.group) and (usedlist[j] == 0):
-                polylist.append((loopcoord.output_pt[0], loopcoord.output_pt[1]))
-                usedlist[j] = 1
+        if i < len(coordlist):
+            innerelem = coordlist[i]
+            while (innerelem.group == elem.group) and (i < len(coordlist)):
+                polylist.append((innerelem.output_pt[0], innerelem.output_pt[1]))
+                i = i + 1
+                innerelem = coordlist[i]
 
         # create the poly and add it to layer
         wkt = create_wkt_poly(polylist)
         add_poly_feature(shplayer, *elem.input_pt, *elem.center_pt, wkt, elem.distance,
                          elem.unmangler, " ", " ".join(elem.data))
 
-    data_source.Destroy()
-
 
 def to_points(input_file, coordlist):
-    output_file = in_path_to_out(input_file) + ".shp"
+    output_file = in_path_to_dir(input_file) + "_point_output.shp"
     data_source = create_data_source(output_file)
     srs = osr.SpatialReference()
     srs.ImportFromEPSG(4326)
@@ -283,6 +321,7 @@ def to_points(input_file, coordlist):
         add_point_feature(shplayer, *elem.input_pt, *elem.center_pt, *elem.output_pt, elem.distance,
                           elem.unmangler, " ", " ".join(elem.data))
     data_source.Destroy()
+    return output_file
 
 
 def to_csv(input_file, coordlist):
@@ -301,7 +340,7 @@ def to_csv(input_file, coordlist):
             else:
                 writer.writerow(["error", "", "", "", "", "", "", "", "", *elem.data])
                 print("{}: error". format(i))
-
+    return output_file
 
 #todo add https://pcjericks.github.io/py-gdalogr-cookbook/layers.html#create-a-new-shapefile-and-add-data
 #todo documentation http://gdal.org/java/index.html?org/gdal/ogr/FieldDefn.html
