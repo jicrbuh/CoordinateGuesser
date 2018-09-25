@@ -12,7 +12,8 @@ class Unmangler:
             yUnmangler = xUnmangler
         self.x = xUnmangler
         self.y = yUnmangler
-    def can(self,x,y):
+
+    def can(self, x, y):
         """
         checks whether the Unmangler can handle a coordinate
         :param x: the x component of the coordinate
@@ -44,7 +45,7 @@ class Unmangler:
             halcore = str(self.x)
         else:
             halcore = "x: "+str(self.x)+", y: "+str(self.y)
-        return "regular WGS84GEO, submanglers: "+halcore
+        return "regular WGS84GEO; submanglers: "+halcore
 
 
 class UtmUnmangler (Unmangler):
@@ -75,7 +76,7 @@ class UtmUnmangler (Unmangler):
             halcore = str(self.x)
         else:
             halcore = "x: " + str(self.x) + ", y: " + str(self.y)
-        return "projection converter mangler from projection ("+ self.projstring +"), submanglers: " + halcore
+        return "projection converter mangler from projection ("+ self.projstring +"); submanglers: " + halcore
 
 
 class UtmBiasedUnmangler(UtmUnmangler):
@@ -87,7 +88,7 @@ class UtmBiasedUnmangler(UtmUnmangler):
         self.yoffset = yoffset
         self.xoffset = xoffset
 
-    def toCor(self,x,cx,y,cy):
+    def toCor(self, x, cx, y, cy):
         ux, uy = Unmangler.toCor(self, x, cx, y, cy)
         ux += self.xoffset
         uy += self.yoffset
@@ -98,7 +99,7 @@ class UtmBiasedUnmangler(UtmUnmangler):
             halcore = str(self.x)
         else:
             halcore = "x: " + str(self.x) + ", y: " + str(self.y)
-        return "projection converter mangler from projection ("+ self.projstring +") with biases ({}, {}), submanglers: ".format(self.xoffset,self.yoffset) + halcore
+        return "projection converter mangler from projection ("+ self.projstring +") with biases ({}; {}), submanglers: ".format(self.xoffset,self.yoffset) + halcore
 
 
 class InverterUnmangler:
@@ -137,3 +138,30 @@ class UtmBiasedInvertedUnmangler(UtmBiasedUnmangler):
         else:
             halcore = "x: " + str(self.x) + "; y: " + str(self.y)
         return "projection inverted converter mangler from projection ("+ self.projstring +") with biases ({}; {}); submanglers: ".format(self.xoffset,self.yoffset) + halcore
+
+class ToggleSignUnmangler (Unmangler):
+    def __init__(self, projstring, togglex, toggley):
+        Unmangler.__init__(self, xUnmangler, yUnmangler)
+        self.projstring = projstring
+
+    def toCor(self, x, cx, y, cy):
+        ux, uy = Unmangler.toCor(self, x, cx, y, cy)
+        return self.convertToGeo(ux, uy)
+
+    def convertToGeo(self,ux,uy):
+        destproj = osr.SpatialReference()
+        destproj.ImportFromProj4("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
+        sourceproj = osr.SpatialReference()
+        sourceproj.ImportFromProj4(self.projstring)
+
+        transform = osr.CoordinateTransformation(sourceproj, destproj)
+        t = transform.TransformPoint(ux, uy)
+        dx, dy, _ = t
+        return dx, dy
+
+    def __str__(self):
+        if self.x == self.y:
+            halcore = str(self.x)
+        else:
+            halcore = "x: " + str(self.x) + ", y: " + str(self.y)
+        return "projection converter mangler from projection ("+ self.projstring +"); submanglers: " + halcore

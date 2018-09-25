@@ -47,6 +47,6 @@ def extractSignfromGeo(x):
         sign = 1
         pos = 2
     if x.startswith('-'):
-        sign*=-1
+        sign *= -1
         x = x[1:]
     return re.sub('[swenSWENolOL]', '', x, 1), sign, pos

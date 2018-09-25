@@ -45,14 +45,11 @@ def staticSetCoor(destinationLineEdit,x,y):
 #new declaration of ui
 MainWindowUI, MainWindowBase = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'CoordGuesser_dialog_base.ui'))
 
-# todo find a way to handle the header
-# todo only group points in batch mode if they're contiguous (minding blank lines)
-# todo save row 3 after other data if attr isn't chosen
-# todo fix the case of combining W\S + minus sign. aka double minus
-# todo handle other projs. get projs as a single proj4 string or a path to file containing multiple proj4 string
+# todo fix the case of combining W\S + minus sign. aka double minus? suppose to work
+# todo add an unmangler that toggles the half coordinate sign
 
 
-class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
+class CoordGuesserDialog(MainWindowBase, MainWindowUI):
     def tell(self, mess):
         QtWidgets.QMessageBox.information(self, "DEBUG: ", str(mess))
 
@@ -85,7 +82,7 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
             self.toggleFromLongLat()
         else:
             self.toggleFromLayer()
-
+        self.onSingleModeSelected()
 
         ######################
         ######connects#######
@@ -133,20 +130,14 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
 
     def onSingleModeSelected(self):
         self.selectFeatureComboBox.setEnabled(True)
-        self.lineEdit_filePath.setEnabled(False)
-        self.checkBox_attr.setEnabled(False)
-        self.pushButton_browse.setEnabled(False)
-        self.scrambled.setEnabled(True)
-        self.xydelim.setEnabled(True)
+        self.groupBox_batch.setEnabled(False)
+        self.groupBox_single.setEnabled(True)
 
     def onBatchModeSelected(self):
         if self.checkBox_attr.isChecked():
             self.selectFeatureComboBox.setEnabled(False)
-        self.lineEdit_filePath.setEnabled(True)
-        self.checkBox_attr.setEnabled(True)
-        self.pushButton_browse.setEnabled(True)
-        self.scrambled.setEnabled(False)
-        self.xydelim.setEnabled(False)
+        self.groupBox_batch.setEnabled(True)
+        self.groupBox_single.setEnabled(False)
 
     def onChangedAttrCheckBox(self,int):
         self.fromLayerRadioButton.setChecked(True)
@@ -185,7 +176,6 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
             destinationComboBox.insertItem(float('inf'), layer.name(), layer)
         destinationComboBox.setCurrentIndex(0)
         if len(vectorList) > 0:
-            print(str(len(vectorList)))
             self.getFieldList(0)
 
     def onLayerSelected(self, ind):
@@ -322,14 +312,13 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
                 self.clearOutpus()
         # batch mode
         else:
+            header = self.checkBox_header.isChecked()
             if self.checkBox_attr.isChecked():
-                # print("attr is checked")
 
                 layer = self.selectLayerComboBox.currentData()
                 path = layer.dataProvider().dataSourceUri()
                 path = path[:path.rfind('|')]
                 layer = path
-
                 field = self.selectFieldComboBox.currentText()
 
             inputPath, outpuPath = self.getInOutPath()
@@ -341,8 +330,9 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
                 (guessX, guessY) = (float(guessX), float(guessY))
             if self.fromLayerRadioButton.isChecked() and self.checkBox_attr.isChecked() is False:
                 (guessX, guessY) = self.lineEdit_centroid.text().split(', ')  # guess is the centroid of the feature
+                (guessX, guessY) = (float(guessX), float(guessY))
             try:
-                filepath = parse_file.parse_file(inputPath, guessX, guessY, outformat, layer, field, additionProj)
+                filepath = parse_file.parsefile(inputPath, guessX, guessY, outformat, header, layer, field, additionProj)
                 self.clearOutpus()
                 self.changeMessage("File created successfully at: {}"
                                    .format(os.path.split(os.path.abspath(inputPath))[0]))
@@ -355,6 +345,8 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         if outformat != 0:
             try:
                 layer = self.iface.addVectorLayer(filepath, "", "ogr")
+                layer.setProviderEncoding(u'UTF-8')
+                layer.dataProvider().setEncoding(u'UTF-8')
             except:
                 self.clearOutpus()
                 self.changeMessage("Error: could not load file to QGIS. Try closing it")
@@ -367,24 +359,43 @@ class CoordGuesserDialog(MainWindowBase, MainWindowUI):# new
         else:
             return 2
 
+    def only_valid_proj(self, content):
+        validlist = []
+        for proj in content:
+            print(f"possproj: {proj}")
+            destproj = osr.SpatialReference()
+            errorInt = destproj.ImportFromProj4(proj)
+            if errorInt != 5:
+                validlist.append(proj)
+        return validlist
+
     def getAdditionalProj(self):
+        projlist = []
         addProjText = self.lineEdit_addProj.text()
         if addProjText:
-            if len(addProjText) in range(1,3):
+            if len(addProjText) in range(1, 3):
                 try:
                     myzone = int(addProjText)
-                    return [myzone]
+                    projlist = [myzone]
                 except ValueError:
-                    return []
+                    projlist = []
             elif isinstance(addProjText, str):
                 destproj = osr.SpatialReference()
                 errorInt = destproj.ImportFromProj4(addProjText)
-                if errorInt == 5:
-                    self.changeMessage("ERROR: Additional projection isn't a valid PROJ.4 string")
-                    return []
+                if errorInt != 5:
+                    projlist = [addProjText]
+                else:  # if isn't proj4 string, try opening it as a file
+                    try:
 
-                return [addProjText]
-        return []
+                        addProjText = addProjText.replace('"', '')
+                        print(f"opening proj file {addProjText}")
+                        with open(addProjText) as f:
+                            content = f.readlines()
+                            content = [x.strip() for x in content]
+                            projlist = self.only_valid_proj(content)
+                    except IOError:
+                        self.changeMessage("ERROR: couldn't parse any additional projections")
+        return projlist
 
     def show_outputs(self, *output_guesses, isguess=True):
         first_guess = output_guesses[0][0]

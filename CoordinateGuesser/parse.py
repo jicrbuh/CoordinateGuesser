@@ -117,7 +117,6 @@ def Parse(inp, approxPoint = None, additionalprojs = [], delimiter = '[\t,]'):
         realx, realy = u.toCor(ix, cx, iy, cy)
         if realy > 90 or realy < -90:
             continue
-
         suspects.append((u.toCor(ix, cx, iy, cy), str(u)))
 
     if approxPoint is None:
