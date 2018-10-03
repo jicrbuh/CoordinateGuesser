@@ -19,9 +19,9 @@ class concattedDMS:
     """903030->91.00833"""
     @staticmethod
     def split(x):
-        blacklist = [chr(u) for u in [0x00B0, 0x2032, 0x2033 ]]
+        blacklist = [chr(u) for u in [0x00B0, 0x2032, 0x2033]] #° , ', "
         for b in blacklist:
-            x = x.replace(b,'',3)
+            x = x.replace(b, '', 3)
         sign = 1
         if x.startswith('-'):
             sign = -1
@@ -163,7 +163,7 @@ class identUTM:
     """raw utm"""
     def can(self, x):
 
-        (abx, sign, pos) = extractSignfromGeo(x)  ##TODO needs to handle WNSE!
+        (abx, sign, pos) = extractSignfromGeo(x)  # TODO needs to handle WNSE! - seems like already done
         try:
             d = sign*tofloatindif(abx)
         except ValueError:

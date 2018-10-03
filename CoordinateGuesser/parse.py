@@ -17,10 +17,10 @@ def genUnmanglers(additionalprojs,ix,iy):
     dest = []
     utmHalfcors = [identUTM()]
 
-    offsets = [i*1000000 for i in range(1,10)]
+    offsets = [i*1000000 for i in range(1, 10)]  # a set of offsets for the utm unmangler
     utmEastingLMDigit = []
     utmNorthingLMDigit = []
-    zones = range(1,61)
+    zones = range(1, 61)
     utmgens = [utmBiasedGen(0, 0, i) for i in zones]
     if all([ix, iy]):  # if genUnmanglers
         try:
@@ -30,11 +30,10 @@ def genUnmanglers(additionalprojs,ix,iy):
             leng_iy=len(iy_int_string)
             power_ten_x = pow(10, leng_ix)
             power_ten_y = pow(10, leng_iy)
-            xoffsets = [i*power_ten_x  for i in range(1, 10)]
+            xoffsets = [i*power_ten_x for i in range(1, 10)]
             yoffsets = [i*power_ten_y for i in range(1, 10)]
             utmEastingLMDigit = [utmBiasedGen(i, 0, j) for i in xoffsets for j in zones]
             utmNorthingLMDigit = [utmBiasedGen(0, i, j) for i in yoffsets for j in zones]
-
         except ValueError:
             pass
 
@@ -45,7 +44,7 @@ def genUnmanglers(additionalprojs,ix,iy):
          #   aup = (0,0,aup)
        # else isinstance(aup,string):
         #    aup=(0,0,aup)
-        aup =(0,0,aup)
+        aup =(0, 0, aup)
         utmgens.append(utmBiasedGen(*aup))
         #utmgens.append(utmBiasedGen(aup)) #chen
     for gen in utmgens:
